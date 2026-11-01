@@ -225,6 +225,7 @@ static const char *default_name(const struct url *u)
 /* ---- the transfer ------------------------------------------------------------- */
 
 static BPTR out_fh;
+static struct ost_save save;           /* the file being saved (ostool.h) */
 static long long done, total;
 
 static void progress(BOOL last)
@@ -333,17 +334,18 @@ static int httpget_main(int argc, char **argv)
     }
     if (hops > 5) { fprintf(stderr, "httpget: too many redirects\n"); goto out; }
 
-    out_fh = !strcmp(to, "-") ? Output() : Open((STRPTR)to, MODE_NEWFILE);
+    /* to a temporary file, kept under `to` only when the transfer completes */
+    out_fh = !strcmp(to, "-") ? Output() : ost_save_open(&save, to);
     if (!out_fh) { fprintf(stderr, "httpget: cannot write %s\n", to); goto out; }
     if (body(chunked)) {
         fprintf(stderr, "\nhttpget: the transfer broke off after %lld bytes\n", done);
-        if (out_fh != Output()) { Close(out_fh); out_fh = Output(); DeleteFile((STRPTR)to); }
+        if (out_fh != Output()) ost_save_close(&save, 0, "httpget");
     } else {
         progress(TRUE);
-        if (strcmp(to, "-") && !quiet) printf("Saved %s\n", to);
-        rc = 0;
+        if (out_fh == Output()) rc = 0;
+        else if (ost_save_close(&save, 1, "httpget") == 0) rc = 0;
+        if (rc == 0 && strcmp(to, "-") && !quiet) printf("Saved %s\n", to);
     }
-    if (out_fh != Output()) Close(out_fh);
 
 out:
     conn_close();

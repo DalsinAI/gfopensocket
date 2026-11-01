@@ -78,25 +78,26 @@ static long request(UWORD op, const char *file)
 
 static int get(const char *remote, const char *local)
 {
+    struct ost_save sv;                     /* a failed fetch keeps the old file */
     BPTR fh;
     UWORD block = 1;
     long len, n, total = 0;
     if (strlen(remote) > BLOCK - 10) { fprintf(stderr, "tftp: the name is too long\n"); return 10; }
-    if (!(fh = Open((STRPTR)local, MODE_NEWFILE))) { fprintf(stderr, "tftp: cannot write %s\n", local); return 10; }
+    if (!(fh = ost_save_open(&sv, local))) { fprintf(stderr, "tftp: cannot write %s\n", local); return 10; }
     len = request(RRQ, remote);
     for (;;) {
         n = exchange(len, DATA, block);
-        if (n < 0) { Close(fh); DeleteFile((STRPTR)local); return 10; }
+        if (n < 0) { ost_save_close(&sv, 0, "tftp"); return 10; }
         if (n > 4 && Write(fh, in + 4, n - 4) != n - 4) {
             fprintf(stderr, "tftp: writing %s failed\n", local);
-            Close(fh); DeleteFile((STRPTR)local); return 10;
+            ost_save_close(&sv, 0, "tftp"); return 10;
         }
         total += n - 4;
         put16(out, ACK); put16(out + 2, block); len = 4;
         if (n - 4 < BLOCK) { send_out(len); break; }        /* the last block: acknowledge it once */
         block++;
     }
-    Close(fh);
+    if (ost_save_close(&sv, 1, "tftp")) return 10;
     printf("Received %s: %ld bytes\n", local, total);
     return 0;
 }

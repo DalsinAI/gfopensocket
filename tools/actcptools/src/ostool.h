@@ -6,6 +6,7 @@
 #define OSTOOL_H
 
 #include <exec/types.h>
+#include <dos/dos.h>
 
 extern struct Library *SocketBase;
 
@@ -44,6 +45,21 @@ void ost_lines_init(struct ost_lines *l, LONG s);
 long ost_line(struct ost_lines *l, char *out, long max, int seconds);
 /* Bytes already read past the last line: for a body after headers. */
 long ost_lines_take(struct ost_lines *l, char *out, long max);
+
+/* Saving a download without losing the file it replaces. ost_save_open
+ * writes to a temporary file in name's drawer (name itself when name is
+ * not on a file system: PRT:, NIL:, PIPE:, CON:). ost_save_close keeps it
+ * under name when ok (an earlier file of that name is replaced only then),
+ * else deletes it, so a failed fetch leaves what was there untouched.
+ * ost_save_open: the file to write, or 0 with IoErr() set. ost_save_close:
+ * 0 saved, -1 not (prog: the tool's name, for the message). */
+struct ost_save {
+    BPTR fh;
+    const char *name;
+    char tmp[256];                 /* "" when writing to name directly */
+};
+BPTR ost_save_open(struct ost_save *sv, const char *name);
+int ost_save_close(struct ost_save *sv, int ok, const char *prog);
 
 /* Runs body on a 16 KB stack: libnix ignores __stack. */
 int ost_main(int (*body)(int, char **), int argc, char **argv);

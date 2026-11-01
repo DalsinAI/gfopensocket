@@ -313,13 +313,9 @@ static int ftp_main(int argc, char **argv)
         }
         else if (!strcasecmp(w[0], "get") && n > 1) {
             const char *local = n > 2 ? w[2] : (const char *)FilePart((STRPTR)w[1]);
-            BPTR fh = Open((STRPTR)local, MODE_NEWFILE);
-            if (!fh) printf("Cannot write %s.\n", local);
-            else {
-                int r = fetch("RETR", w[1], fh, !binary);
-                Close(fh);
-                if (r) DeleteFile((STRPTR)local);
-            }
+            struct ost_save sv;                     /* a failed fetch keeps the old file */
+            if (!ost_save_open(&sv, local)) printf("Cannot write %s.\n", local);
+            else ost_save_close(&sv, fetch("RETR", w[1], sv.fh, !binary) == 0, "ftp");
         }
         else if (!strcasecmp(w[0], "put") && n > 1)
             send_file(w[1], n > 2 ? w[2] : (const char *)FilePart((STRPTR)w[1]));
