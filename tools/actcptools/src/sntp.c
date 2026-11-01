@@ -5,7 +5,7 @@
  *   sntp SET SAVE           and its battery-backed clock
  * The Amiga's clock is local time: the offset from UTC comes from Locale
  * prefs (AmigaOS 2.1 and later), else UTC is assumed.
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <exec/io.h>
 #include <devices/timer.h>
@@ -27,7 +27,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: sntp 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: sntp 1.0 (4.10.2026) GFOpenSocket";
 
 struct Device *TimerBase;
 struct LocaleBase *LocaleBase;

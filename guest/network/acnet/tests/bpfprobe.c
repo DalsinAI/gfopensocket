@@ -51,10 +51,10 @@ int main(void)
     buflen=sizeof(buffer);
     check(bpf_ioctl(h,BIOCSBLEN,&buflen)==0,"BIOCSBLEN");
 
-    memset(&ifr,0,sizeof(ifr)); strcpy(ifr.ifr_name,"opensocket0");
-    check(bpf_ioctl(h,BIOCSETIF,&ifr)==0,"BIOCSETIF opensocket0");
+    memset(&ifr,0,sizeof(ifr)); strcpy(ifr.ifr_name,"gfopensocket0");
+    check(bpf_ioctl(h,BIOCSETIF,&ifr)==0,"BIOCSETIF gfopensocket0");
     memset(&ifr,0,sizeof(ifr));
-    check(bpf_ioctl(h,BIOCGETIF,&ifr)==0 && strcmp(ifr.ifr_name,"opensocket0")==0,"BIOCGETIF");
+    check(bpf_ioctl(h,BIOCGETIF,&ifr)==0 && strcmp(ifr.ifr_name,"gfopensocket0")==0,"BIOCGETIF");
     check(bpf_ioctl(h,BIOCGDLT,&dlt)==0 && dlt==DLT_EN10MB,"BIOCGDLT Ethernet");
     check(bpf_ioctl(h,BIOCSETF,&prog)==0,"BIOCSETF accept-all");
     check(bpf_ioctl(h,BIOCSRTIMEOUT,&timeout)==0,"BIOCSRTIMEOUT");

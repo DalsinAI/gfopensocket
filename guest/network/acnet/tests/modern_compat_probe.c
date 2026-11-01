@@ -29,7 +29,7 @@ int main(void)
 
     SocketBase = OpenLibrary("bsdsocket.library", 4);
     if (!SocketBase) { printf("OPEN: FAIL\n"); return 20; }
-    printf("OpenSocket modern compatibility probe\n");
+    printf("GFOpenSocket modern compatibility probe\n");
     memset(&addr, 0, sizeof(addr));
     check(inet_aton("192.0.2.1", &addr) == 1, "inet_aton");
     memset(text, 0, sizeof(text));

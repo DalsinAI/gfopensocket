@@ -5,7 +5,7 @@
 #include <exec/io.h>
 #include <acnetwork.h>
 
-#define ACWIFI_DEVICE_NAME    "opensocketwifi.device"   /* was acwifi.device (4 Oct 2026) */
+#define ACWIFI_DEVICE_NAME    "gfopensocketwifi.device"   /* was acwifi.device (4 Oct 2026) */
 #define ACWIFI_DEVICE_VERSION 1
 
 #define ACWIFI_SCAN   1

@@ -3,21 +3,21 @@ Uploader:     (We fill this in at upload time)
 Author:       AmigaChrome Team
 Type:         comm/tcp
 Version:      1.0
-Requires:     AmigaOS 3.2.3, an AmigaChrome machine (see below)
+Requires:     AmigaOS 3.2.3, an AmiCradle machine (see below)
 Architecture: m68k-amigaos >= 3.2
 Distribution: Aminet
 
-OpenSocket is a free bsdsocket.library for AmigaOS 3.2.3: the classic
+GFOpenSocket is a free bsdsocket.library for AmigaOS 3.2.3: the classic
 Amiga socket interface that mail, web, FTP and game programs use, with
 its own core library, the card's driver, a Commodity and the standard
 network tools. It was called ACNet until 4 October 2026.
 
 What it needs today
 -------------------
-OpenSocket's first backend, OpenSocket Host, sends socket calls through
-the OpenSocket card of an AmigaChrome machine to real sockets on the x86 or
-ARM64 cores it runs on. So today it needs AmigaChrome, with Network switched
-on in Cradle (which then installs OpenSocket by itself). OpenSocketDirect, a
+GFOpenSocket's first backend, GFOpenSocket Host, sends socket calls through
+the GFOpenSocket card of an AmiCradle machine to real sockets on the x86 or
+ARM64 cores it runs on. So today it needs AmiCradle, with Network switched
+on in Cradle (which then installs GFOpenSocket by itself). GFOpenSocketDirect, a
 TCP/IP stack of its own for real Amigas (PiStorm first, then SANA-II
 cards), is planned.
 
@@ -25,26 +25,26 @@ What is in it
 -------------
 Libs/bsdsocket.library       all 46 classic calls, none stubbed, and 27
                              later ones (BPF, routes, modern lookups)
-Libs/opensocket.library      the core: status, interfaces, routes,
+Libs/gfopensocket.library      the core: status, interfaces, routes,
                              sockets, the event log, Wi-Fi requests
-Devs/Networks/opensocket.device   the card's driver, with a SANA-II face
-Devs/opensocketwifi.device   the Wi-Fi outside the Amiga, if allowed
-Tools/Commodities/OpenSocketControl   status, Wi-Fi, connections,
+Devs/Networks/gfopensocket.device   the card's driver, with a SANA-II face
+Devs/gfopensocketwifi.device   the Wi-Fi outside the Amiga, if allowed
+Tools/Commodities/GFOpenSocketControl   status, Wi-Fi, connections,
                              diagnostics and the log (GadTools)
-C/OpenSocket                 online, offline and status from a Shell
-Tools/OpenSocket/            ping, traceroute, arp, ifconfig, route,
+C/GFOpenSocket                 online, offline and status from a Shell
+Tools/GFOpenSocket/            ping, traceroute, arp, ifconfig, route,
                              netstat, hostname, resolve, host, whois,
                              finger, telnet, ftp, tftp, sntp, httpget, nc
 
 The tools stay in their own drawer, so another stack's commands in C:
-are never overwritten, and OpenSocket never replaces another stack's
+are never overwritten, and GFOpenSocket never replaces another stack's
 bsdsocket.library. On an older install it falls back to acnet.device.
 
 Licence
 -------
 MIT. Copyright (c) 2026 AmigaChrome Team. Use it, change it, fork it and
 pass it on, free; the copyright and licence notice stays with every
-copy. If you fork it, please say it is based on OpenSocket by the AmigaChrome
+copy. If you fork it, please say it is based on GFOpenSocket by the AmigaChrome
 Team (a request, not a condition).
 
 ping, traceroute and arp come from 4.4BSD-Lite2 through Olaf Barthel's

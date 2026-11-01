@@ -34,14 +34,14 @@ int main(void)
     char lip[24], rip[24];
 
     ACNetworkBase = OpenLibrary(ACNETWORK_LIBRARY_NAME, ACNETWORK_LIBRARY_VERSION);
-    if (!ACNetworkBase) { printf("netstat: opensocket.library is not available\n"); return 20; }
+    if (!ACNetworkBase) { printf("netstat: gfopensocket.library is not available\n"); return 20; }
 
     memset(&r, 0, sizeof(r));
     r.command = ACNETWORK_CMD_STATUS;
     r.rx = (UBYTE *)&st;
     r.rxmax = sizeof(st);
     if (ACNetwork_Call(&r) >= 0) {
-        printf("OpenSocket: %s, link %u Mb/s, sockets %u\n",
+        printf("GFOpenSocket: %s, link %u Mb/s, sockets %u\n",
                (st.state & ACNETWORK_STATE_ONLINE) ? "online" : "offline", (unsigned)st.link_mbps, (unsigned)st.sockets);
         printf("Traffic: in %llu  out %llu  connects %u  refused %u\n\n",
                (unsigned long long)st.bytes_in, (unsigned long long)st.bytes_out, (unsigned)st.connects, (unsigned)st.refused);
@@ -53,7 +53,7 @@ int main(void)
     r.rx = (UBYTE *)rows;
     r.rxmax = sizeof(rows);
     n = ACNetwork_Call(&r);
-    if (n < 0) { printf("netstat: OpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
+    if (n < 0) { printf("netstat: GFOpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
 
     printf("Proto  Local Address          Foreign Address        State\n");
     for (i = 0; i < n; ++i) {

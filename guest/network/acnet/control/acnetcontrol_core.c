@@ -1,10 +1,10 @@
 /*
- * OpenSocketControl's core (acnetcontrol_core.h): the live pages. What the
+ * GFOpenSocketControl's core (acnetcontrol_core.h): the live pages. What the
  * retired ReAction ACNetControl did, without the toolkit: status, traffic,
  * connections, the event log, the PC's Wi-Fi, and the diagnostics.
  *
- * opensocket.library gives the status, interfaces, routes, DNS servers,
- * sockets and log; opensocketwifi.device the Wi-Fi; bsdsocket.library the
+ * gfopensocket.library gives the status, interfaces, routes, DNS servers,
+ * sockets and log; gfopensocketwifi.device the Wi-Fi; bsdsocket.library the
  * diagnostics. Each is opened only when there, so the Commodity also runs
  * on an Amiga without the card and says so.
  *
@@ -85,7 +85,7 @@ static char wifi_row_ssid[WIFI_ROWS][33];
 const ACNCPage acnc_page[ACNC_PAGES] = {
     { "Status", 2, {
         { "Network",
-          { st_network, st_card, "Library       bsdsocket.library (OpenSocket)",
+          { st_network, st_card, "Library       bsdsocket.library (GFOpenSocket)",
             st_host, st_iface, st_ip, st_mask, st_gateway, st_dns, NULL },
           { { 0 } }, 0, 0, 0,
           { { GID_REFRESH, "_Refresh", FALSE }, { GID_GO_OFFLINE, toggle_label, FALSE }, { 0 } }, TRUE },
@@ -117,7 +117,7 @@ const ACNCPage acnc_page[ACNC_PAGES] = {
           { { GID_DIAG_DNS, "Look _up name", FALSE }, { GID_DIAG_CONNECT, "_Test host", FALSE },
             { GID_DIAG_INTERNET, "_Internet?", FALSE }, { GID_DIAG_COPY, "Sa_ve report", FALSE } }, TRUE } } },
     { "Log", 1, {
-        { "OpenSocket event log",
+        { "GFOpenSocket event log",
           { "Online and offline, DNS failures and refusals, newest last.", NULL },
           { { 0 } }, GID_L_LOG, 10, 70,
           { { GID_REFRESH, "_Refresh", FALSE }, { GID_LOG_CLEAR, "_Clear view", FALSE },
@@ -163,7 +163,7 @@ struct List *acnc_list(ULONG list_id)
     return &r->list;
 }
 
-/* ---- opensocket.library ---------------------------------------------------- */
+/* ---- gfopensocket.library ---------------------------------------------------- */
 
 static LONG os_call(ULONG command, ULONG arg0, ULONG arg1, APTR rx, ULONG rxmax, ULONG *rxlen)
 {
@@ -193,7 +193,7 @@ static BOOL ip4_is_zero(const UBYTE a[4])
 
 static ULONG card_state(void)
 {
-    /* Without opensocket.library: ask the device itself, as first light did. */
+    /* Without gfopensocket.library: ask the device itself, as first light did. */
     struct MsgPort *port = CreateMsgPort();
     struct IOStdReq *req = port ? (struct IOStdReq *)CreateIORequest(port, sizeof(*req)) : NULL;
     ULONG state = 0;
@@ -260,7 +260,7 @@ static void read_sockets(void)
                 rip, (unsigned)s[i].remote_port, socket_state_name(s[i].state));
         rows_add(&conn_rows, line);
     }
-    if (n <= 0) rows_add(&conn_rows, ACNetworkBase ? "No open sockets." : "opensocket.library is not installed.");
+    if (n <= 0) rows_add(&conn_rows, ACNetworkBase ? "No open sockets." : "gfopensocket.library is not installed.");
 }
 
 /* Everything the Status page and the status bar say. */
@@ -280,17 +280,17 @@ static void read_status(void)
     online_state = have_st ? st.state : card_state();
 
     if (!(online_state & ACNETWORK_STATE_CARD)) {
-        strcpy(st_network, "Network       No OpenSocket card");
+        strcpy(st_network, "Network       No GFOpenSocket card");
         strcpy(st_card,    "Card          Not present");
-        strcpy(status_bar, "No OpenSocket card - turn Network on in Cradle and reboot");
+        strcpy(status_bar, "No GFOpenSocket card - turn Network on in Cradle and reboot");
     } else if (!(online_state & ACNETWORK_STATE_ONLINE)) {
         strcpy(st_network, "Network       Offline");
-        strcpy(st_card,    "Card          OpenSocket - AmigaChrome Team product 6 - HostSocket");
+        strcpy(st_card,    "Card          GFOpenSocket - AmigaChrome Team product 6 - HostSocket");
         strcpy(status_bar, "Offline - Go online, or turn Network on in Cradle");
     } else {
         strcpy(st_network, "Network       Online");
-        strcpy(st_card,    "Card          OpenSocket - AmigaChrome Team product 6 - HostSocket");
-        strcpy(status_bar, ACNetworkBase ? "Online" : "Online - opensocket.library is not installed");
+        strcpy(st_card,    "Card          GFOpenSocket - AmigaChrome Team product 6 - HostSocket");
+        strcpy(status_bar, ACNetworkBase ? "Online" : "Online - gfopensocket.library is not installed");
     }
     strcpy(toggle_label, (online_state & ACNETWORK_STATE_ONLINE) ? "_Go offline..." : "_Go online");
 
@@ -356,7 +356,7 @@ void acnc_open(void)
     rows_init(&log_rows);
     rows_init(&wifi_rows);
     ACNetworkBase = OpenLibrary(ACNETWORK_LIBRARY_NAME, ACNETWORK_LIBRARY_VERSION);
-    if (!ACNetworkBase) rows_add(&log_rows, "opensocket.library is not installed: no event log.");
+    if (!ACNetworkBase) rows_add(&log_rows, "gfopensocket.library is not installed: no event log.");
     acnc_refresh(NULL);
 }
 
@@ -418,7 +418,7 @@ static LONG wifi_call(ULONG command, const char *ssid, struct ACWiFiNetwork *row
     LONG result = -1;
 
     if (!req || OpenDevice((STRPTR)ACWIFI_DEVICE_NAME, 0, (struct IORequest *)req, 0)) {
-        strcpy(wifi_result, "opensocketwifi.device is not installed.");
+        strcpy(wifi_result, "gfopensocketwifi.device is not installed.");
     } else {
         register struct Device *a6 __asm("a6") = req->io_Device;
         register struct ACWiFiCall *a0 __asm("a0") = &call;
@@ -561,11 +561,11 @@ static void put(BPTR fh, const char *s)
 
 static void save_report(void)
 {
-    const char *path = "RAM:OpenSocketReport.txt";
+    const char *path = "RAM:GFOpenSocketReport.txt";
     BPTR fh = Open((STRPTR)path, MODE_NEWFILE);
     int i;
     if (!fh) { sprintf(diag_result, "Could not write %s.", path); return; }
-    put(fh, "OpenSocketControl report");
+    put(fh, "GFOpenSocketControl report");
     put(fh, "");
     for (i = 0; acnc_page[0].group[0].line[i]; ++i) put(fh, acnc_page[0].group[0].line[i]);
     for (i = 0; acnc_page[0].group[1].line[i]; ++i) put(fh, acnc_page[0].group[1].line[i]);
@@ -581,11 +581,11 @@ static void save_report(void)
 
 static void save_log(void)
 {
-    const char *path = "RAM:OpenSocketLog.txt";
+    const char *path = "RAM:GFOpenSocketLog.txt";
     BPTR fh = Open((STRPTR)path, MODE_NEWFILE);
     int i;
     if (!fh) { sprintf(status_bar, "Could not write %s", path); return; }
-    put(fh, "OpenSocket event log");
+    put(fh, "GFOpenSocket event log");
     for (i = 0; i < log_rows.count; ++i) put(fh, log_rows.text[i]);
     Close(fh);
     sprintf(status_bar, "Saved the log as %s", path);
@@ -602,7 +602,7 @@ BOOL acnc_press(ULONG id, BOOL (*confirm)(const char *text))
         case GID_REFRESH:
             break;
         case GID_GO_OFFLINE:
-            if (!ACNetworkBase) { strcpy(status_bar, "opensocket.library is not installed"); return TRUE; }
+            if (!ACNetworkBase) { strcpy(status_bar, "gfopensocket.library is not installed"); return TRUE; }
             if (online_state & ACNETWORK_STATE_ONLINE) {
                 if (!confirm("Take this Amiga offline?\nEvery program's connections close.")) return FALSE;
                 os_call(ACNETWORK_CMD_SET_ONLINE, 0, 0, NULL, 0, NULL);
@@ -678,9 +678,9 @@ int acnc_broker_open(void)
 
     memset(&nb, 0, sizeof(nb));
     nb.nb_Version = NB_VERSION;
-    nb.nb_Name = "OpenSocketControl";
-    nb.nb_Title = "OpenSocket Network Control";
-    nb.nb_Descr = "Status and controls for OpenSocket";
+    nb.nb_Name = "GFOpenSocketControl";
+    nb.nb_Title = "GFOpenSocket Network Control";
+    nb.nb_Descr = "Status and controls for GFOpenSocket";
     nb.nb_Unique = NBU_UNIQUE | NBU_NOTIFY;
     nb.nb_Flags = COF_SHOW_HIDE;
     nb.nb_Pri = 0;

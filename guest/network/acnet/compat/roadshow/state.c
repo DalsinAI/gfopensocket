@@ -147,7 +147,7 @@ struct List *bsd_ObtainInterfaceList(struct SocketBase *sb)
     if (!list) { set_errno(sb, AE_NOMEM); return NULL; }
     node = (struct Node *)(list + 1);
     name = (char *)(node + 1);
-    copy_name(name, "opensocket0", 16);
+    copy_name(name, "gfopensocket0", 16);
     node->ln_Name = (STRPTR)name;
     AddTail(list, node);
     set_errno(sb, 0);
@@ -176,7 +176,7 @@ LONG bsd_QueryInterfaceTagList(struct SocketBase *sb, STRPTR name, struct TagIte
     UBYTE dns[ACNET_COMPAT_DNS_MAX][4];
     LONG n, dnsn;
     struct TagItem *cursor = tags, *ti;
-    if (!ascii_equal((char *)name, "opensocket0")) return fail(sb, AE_INVAL);
+    if (!ascii_equal((char *)name, "gfopensocket0")) return fail(sb, AE_INVAL);
     n = load_interfaces(sb, rows, ACNET_COMPAT_IF_MAX);
     if (n < 0) return -1;
     if (!select_interface(rows, n, &selected)) return fail(sb, AE_INVAL);

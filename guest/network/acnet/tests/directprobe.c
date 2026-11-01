@@ -1,4 +1,4 @@
-/* directprobe: OpenSocketDirect end to end, through bsdsocket.library:
+/* directprobe: GFOpenSocketDirect end to end, through bsdsocket.library:
  * the interface's address (DHCP), a DNS lookup, a TCP connect and an HTTP
  * request. Prints PASS or FAIL for each.
  *   directprobe [host [port [path]]]     (default: example.com 80 /)

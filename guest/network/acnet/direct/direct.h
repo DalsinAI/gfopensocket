@@ -1,11 +1,11 @@
-/* OpenSocketDirect: OpenSocket's own TCP/IP stack (lwIP) over a SANA-II
+/* GFOpenSocketDirect: GFOpenSocket's own TCP/IP stack (lwIP) over a SANA-II
  * device, as bsdsocket.library's Direct backend sees it.
  *
  * The stack keeps writable globals (lwIP's), so it is built as a hunk
  * image of its own: bsdsocket.library carries the image as data and loads
  * it into RAM (romseg.c) when the card layer chooses Direct, so the library
  * itself stays ROM-clean. The image's first RomTag (rt_Name
- * "opensocketdirect") points with rt_Init at its struct DirectOps.
+ * "gfopensocketdirect") points with rt_Init at its struct DirectOps.
  * MIT. */
 #ifndef OPENSOCKET_DIRECT_H
 #define OPENSOCKET_DIRECT_H

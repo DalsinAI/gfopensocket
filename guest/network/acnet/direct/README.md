@@ -1,6 +1,6 @@
-# OpenSocketDirect
+# GFOpenSocketDirect
 
-OpenSocket's own TCP/IP stack over a SANA-II device: bsdsocket.library's
+GFOpenSocket's own TCP/IP stack over a SANA-II device: bsdsocket.library's
 **Direct** backend, chosen by the card layer (`../library/card.c`) when the
 disk has a network driver or configuration.
 

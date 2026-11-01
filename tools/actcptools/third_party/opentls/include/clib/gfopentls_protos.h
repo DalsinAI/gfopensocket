@@ -4,7 +4,7 @@
 
 #include <exec/types.h>
 #include <exec/libraries.h>
-#include <libraries/opentls.h>
+#include <libraries/gfopentls.h>
 
 ULONG OT_Version(VOID);
 struct OTContext * OT_NewContext(CONST struct OTContextConfig *config, LONG *error);

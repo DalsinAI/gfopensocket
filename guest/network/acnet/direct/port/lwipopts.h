@@ -1,4 +1,4 @@
-/* OpenSocketDirect: lwIP's options for OpenSocket's own stack over a
+/* GFOpenSocketDirect: lwIP's options for GFOpenSocket's own stack over a
  * SANA-II device. lwIP runs without an OS layer (NO_SYS): every call into it
  * holds the stack's semaphore (direct_stack.c), from the stack's process or
  * from a bsdsocket.library caller. MIT (lwIP itself: lwip/COPYING). */

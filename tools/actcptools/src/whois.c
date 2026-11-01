@@ -2,7 +2,7 @@
  *   whois aminet.net
  *   whois -h whois.example.net query
  * Without -h it asks IANA, then the server IANA's answer refers to.
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <proto/exec.h>
 #include <sys/types.h>
@@ -14,7 +14,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: whois 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: whois 1.0 (4.10.2026) GFOpenSocket";
 
 /* Asks server; prints the answer; the referral server, if any, into refer. */
 static int ask(const char *server, const char *query, char *refer, int refer_max)

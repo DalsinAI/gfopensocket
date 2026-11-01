@@ -1,7 +1,7 @@
 /* tftp: a file to or from a TFTP server (binary, 512-byte blocks).
  *   tftp host get remote-file [local-file]
  *   tftp host put local-file [remote-file]
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
 #include <proto/exec.h>
@@ -15,7 +15,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: tftp 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: tftp 1.0 (4.10.2026) GFOpenSocket";
 
 enum { RRQ = 1, WRQ, DATA, ACK, ERROR };
 #define BLOCK   512

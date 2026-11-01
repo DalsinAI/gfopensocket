@@ -6,16 +6,16 @@ HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SPECS="$(cd "$HERE/../.." && pwd)/specs/m68k-soft-m68040.specs"
 STOVE=${STOVE:-}
 if [ -z "$STOVE" ]; then
-    echo "Set STOVE to the AmigaChrome OS 3.2 cross-build stove." >&2
+    echo "Set STOVE to the AmiCradle OS 3.2 cross-build stove." >&2
     exit 2
 fi
 
 CC="$STOVE/prefix/bin/m68k-amigaos-gcc"
 OUT=${1:-"$HERE/build"}
 # The library itself and its tools use the kernel-side network headers
-# (net/route.h, net/bpf.h, sys/mbuf.h, netinet/*_var.h), which OpenNDK
+# (net/route.h, net/bpf.h, sys/mbuf.h, netinet/*_var.h), which GFOpenNDK
 # doesn't have yet (sdk/README.md); until it does, they build against the
-# vendor NDK the stoves keep beside it, as before the stoves took OpenNDK.
+# vendor NDK the stoves keep beside it, as before the stoves took GFOpenNDK.
 if [ -d "$STOVE/prefix/m68k-amigaos/ndk-include.vendor" ]; then
   VENDOR_NDK="-I$STOVE/prefix/m68k-amigaos/ndk-include.vendor"
 else
@@ -56,13 +56,13 @@ build_net tftp
 build_net nc
 build_net telnet
 build_net ftp
-# httpget: https:// through OpenTLS (opentls.library, opened at run time; its
+# httpget: https:// through GFOpenTLS (gfopentls.library, opened at run time; its
 # API headers in third_party/opentls). No AmiSSL SDK is needed or used: an
 # AMISSL setting from older callers is ignored.
 build_net httpget -I"$HERE/third_party/opentls/include"
 
-# C:OpenSocket (was acnetctl): status, online, offline
-"$CC" $CFLAGS -I"$HERE/src" "$HERE/src/opensocket.c" -o "$OUT/OpenSocket"
-echo "$OUT/OpenSocket ($(wc -c < "$OUT/OpenSocket") bytes)"
+# C:GFOpenSocket (was acnetctl): status, online, offline
+"$CC" $CFLAGS -I"$HERE/src" "$HERE/src/opensocket.c" -o "$OUT/GFOpenSocket"
+echo "$OUT/GFOpenSocket ($(wc -c < "$OUT/GFOpenSocket") bytes)"
 
 echo "ACTCPTools build complete."

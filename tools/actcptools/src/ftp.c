@@ -4,7 +4,7 @@
  * rename, size, binary, ascii, quote, close, quit (help lists them).
  * Transfers are binary unless "ascii" is given; ascii turns CR LF into LF
  * coming in and LF into CR LF going out.
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
 #include <proto/exec.h>
@@ -20,7 +20,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: ftp 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: ftp 1.0 (4.10.2026) GFOpenSocket";
 
 static LONG ctl = -1;                   /* the control connection */
 static struct ost_lines ctl_lines;

@@ -1,7 +1,7 @@
 /* finger: what a finger server says about a user, or about its users.
  *   finger user@host
  *   finger @host
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <proto/exec.h>
 #include <sys/types.h>
@@ -12,7 +12,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: finger 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: finger 1.0 (4.10.2026) GFOpenSocket";
 
 static int finger_main(int argc, char **argv)
 {

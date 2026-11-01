@@ -8,10 +8,10 @@ The underlying 4.4BSD-Lite2 source remains under its original University of Cali
 
 The original licence includes the historical advertising acknowledgement requirement. Any redistribution of binaries built from these files must preserve the required notices in accompanying documentation/materials.
 
-`hostname.c`, `resolve.c`, `opensocket.c`, `ifconfig.c`, `route.c`, `netstat.c`, `ostool.c`, `host.c`, `whois.c`, `finger.c`, `telnet.c`, `ftp.c`, `tftp.c`, `sntp.c`, `httpget.c` and `nc.c` are original OpenSocket (formerly ACNet) sources and use the repository's MIT licence (`LICENSE`, AmigaChrome Team).
+`hostname.c`, `resolve.c`, `opensocket.c`, `ifconfig.c`, `route.c`, `netstat.c`, `ostool.c`, `host.c`, `whois.c`, `finger.c`, `telnet.c`, `ftp.c`, `tftp.c`, `sntp.c`, `httpget.c` and `nc.c` are original GFOpenSocket (formerly ACNet) sources and use the repository's MIT licence (`LICENSE`, AmigaChrome Team).
 
 `ping`, `traceroute` and `arp` above keep their University of California licence inside the MIT project; their notices travel with them.
 
-`httpget` opens `opentls.library` (OpenTLS, the AmigaChrome Team's, MIT) at run time for https://; `third_party/opentls` holds a copy of its API headers (MIT, `third_party/opentls/LICENSE`). Until 19 October 2026 it could be built with AmiSSL 5 instead; nothing of AmiSSL was ever included here.
+`httpget` opens `gfopentls.library` (GFOpenTLS, the AmigaChrome Team's, MIT) at run time for https://; `third_party/opentls` holds a copy of its API headers (MIT, `third_party/opentls/LICENSE`). Until 19 October 2026 it could be built with AmiSSL 5 instead; nothing of AmiSSL was ever included here.
 
 No AmigaOS NDK headers or libraries are redistributed by ACTCPTools. They are supplied separately to the local build stove.

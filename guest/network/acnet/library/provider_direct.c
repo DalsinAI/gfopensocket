@@ -1,4 +1,4 @@
-/* bsdsocket.library's Direct backend: OpenSocketDirect, OpenSocket's own
+/* bsdsocket.library's Direct backend: GFOpenSocketDirect, GFOpenSocket's own
  * TCP/IP stack (lwIP) over the SANA-II device the card layer chose (card.c).
  *
  * The stack keeps writable globals, so it is not linked into the library:

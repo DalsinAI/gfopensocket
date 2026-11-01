@@ -30,7 +30,7 @@ int main(void)
     io = (struct IOStdReq *)CreateIORequest(port, sizeof(*io));
     if (!io) { DeleteMsgPort(port); return 20; }
     if (OpenDevice(ACWIFI_DEVICE_NAME, 0, (struct IORequest *)io, 0)) {
-        puts("opensocketwifi.device: OPEN FAIL");
+        puts("gfopensocketwifi.device: OPEN FAIL");
         DeleteIORequest((struct IORequest *)io);
         DeleteMsgPort(port);
         return 20;
@@ -42,7 +42,7 @@ int main(void)
     call.networks = &row;
     call.capacity = 1;
     acw_call(io->io_Device, &call);
-    printf("opensocketwifi.device open: PASS\nstatus result=%ld errno=%lu\n",
+    printf("gfopensocketwifi.device open: PASS\nstatus result=%ld errno=%lu\n",
            (long)call.result, (unsigned long)call.error);
 
     CloseDevice((struct IORequest *)io);

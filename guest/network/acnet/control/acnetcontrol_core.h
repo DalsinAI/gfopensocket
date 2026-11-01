@@ -1,5 +1,5 @@
 /*
- * OpenSocketControl's core: what the Commodity shows and does, apart from
+ * GFOpenSocketControl's core: what the Commodity shows and does, apart from
  * drawing it. The GadTools front end (acnetcontrol_gt.c) lays each page out
  * from the tables here: per group, its lines, its input fields, a list and
  * its buttons. The lines and lists are the core's own buffers, which
@@ -77,10 +77,10 @@ typedef struct ACNCPage {
 
 extern const ACNCPage acnc_page[ACNC_PAGES];
 
-#define ACNC_TITLE   "OpenSocketControl - Network Configuration"
+#define ACNC_TITLE   "GFOpenSocketControl - Network Configuration"
 #define ACNC_HOTKEY  "ctrl alt n"
 
-/* Opens opensocket.library (when it is there) and reads everything once. */
+/* Opens gfopensocket.library (when it is there) and reads everything once. */
 void acnc_open(void);
 void acnc_close(void);
 

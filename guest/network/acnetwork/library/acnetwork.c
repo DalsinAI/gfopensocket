@@ -23,8 +23,8 @@ static const char lib_name[] = ACNETWORK_LIBRARY_NAME;
 #define LIB_STR2(x) #x
 #define LIB_STR(x) LIB_STR2(x)
 #define LIB_VR LIB_STR(ACNETWORK_LIBRARY_VERSION) "." LIB_STR(ACNETWORK_LIBRARY_REVISION)
-static const char lib_id[] = "opensocket.library " LIB_VR " (16.10.2026) OpenSocket (AmigaChrome)\r\n";
-static const char lib_ver[] __attribute__((used)) = "$VER: opensocket.library " LIB_VR " (16.10.2026) OpenSocket (AmigaChrome)";
+static const char lib_id[] = "gfopensocket.library " LIB_VR " (16.10.2026) GFOpenSocket (AmiCradle)\r\n";
+static const char lib_ver[] __attribute__((used)) = "$VER: gfopensocket.library " LIB_VR " (16.10.2026) GFOpenSocket (AmiCradle)";
 
 /* The RomTag near the start, its table defined at the end. A RomTag that
  * ends exactly where the hunk ends is not found when the library is

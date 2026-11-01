@@ -1,4 +1,4 @@
-/* ostool: what OpenSocket's newer command-line tools share (host, whois,
+/* ostool: what GFOpenSocket's newer command-line tools share (host, whois,
  * finger, telnet, ftp, tftp, sntp, httpget, nc). They use only the published
  * bsdsocket.library interface, so they run on any Amiga TCP/IP stack.
  * MIT. */

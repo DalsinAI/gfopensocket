@@ -1,4 +1,4 @@
-/* OpenSocketDirect: lwIP's compiler and platform layer for the 68k (big
+/* GFOpenSocketDirect: lwIP's compiler and platform layer for the 68k (big
  * endian), built bare (no C library) with the os32 or the os32-gcc16 stove. MIT. */
 #ifndef OPENSOCKET_ARCH_CC_H
 #define OPENSOCKET_ARCH_CC_H

@@ -469,7 +469,7 @@ static void test_churn(void)
 
 static int bsdqual_main(int argc, char **argv)
 {
-    printf("OpenSocket bsdsocket.library qualification\n");
+    printf("GFOpenSocket bsdsocket.library qualification\n");
     printf("====================================\n");
     fflush(stdout);
 

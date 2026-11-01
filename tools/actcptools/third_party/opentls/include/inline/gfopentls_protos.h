@@ -7,7 +7,7 @@
 
 #include <exec/types.h>
 #include <exec/libraries.h>
-#include <libraries/opentls.h>
+#include <libraries/gfopentls.h>
 
 #ifndef OPENTLS_BASE_NAME
 #define OPENTLS_BASE_NAME OpenTLSBase

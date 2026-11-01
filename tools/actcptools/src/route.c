@@ -23,14 +23,14 @@ int main(void)
     char dst[24], gw[24], mask[24];
 
     ACNetworkBase = OpenLibrary(ACNETWORK_LIBRARY_NAME, ACNETWORK_LIBRARY_VERSION);
-    if (!ACNetworkBase) { printf("route: opensocket.library is not available\n"); return 20; }
+    if (!ACNetworkBase) { printf("route: gfopensocket.library is not available\n"); return 20; }
     memset(&r, 0, sizeof(r));
     r.command = ACNETWORK_CMD_ROUTES;
     r.arg[0] = 64;
     r.rx = (UBYTE *)rows;
     r.rxmax = sizeof(rows);
     n = ACNetwork_Call(&r);
-    if (n < 0) { printf("route: OpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
+    if (n < 0) { printf("route: GFOpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
 
     printf("Destination       Gateway           Netmask           Flags Metric Iface\n");
     for (i = 0; i < n; ++i) {

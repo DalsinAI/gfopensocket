@@ -6,7 +6,7 @@
  *   nc -z host port[-port]     which ports answer
  *   -w seconds                 how long a connect may take (10)
  * Ctrl-C ends it.
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
 #include <proto/exec.h>
@@ -22,7 +22,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: nc 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: nc 1.0 (4.10.2026) GFOpenSocket";
 
 static char buf[4096];
 

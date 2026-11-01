@@ -23,14 +23,14 @@ int main(void)
     char ip[24], mask[24];
 
     ACNetworkBase = OpenLibrary(ACNETWORK_LIBRARY_NAME, ACNETWORK_LIBRARY_VERSION);
-    if (!ACNetworkBase) { printf("ifconfig: opensocket.library is not available\n"); return 20; }
+    if (!ACNetworkBase) { printf("ifconfig: gfopensocket.library is not available\n"); return 20; }
     memset(&r, 0, sizeof(r));
     r.command = ACNETWORK_CMD_INTERFACES;
     r.arg[0] = 32;
     r.rx = (UBYTE *)rows;
     r.rxmax = sizeof(rows);
     n = ACNetwork_Call(&r);
-    if (n < 0) { printf("ifconfig: OpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
+    if (n < 0) { printf("ifconfig: GFOpenSocket error %u\n", (unsigned)r.error); CloseLibrary(ACNetworkBase); return 10; }
 
     for (i = 0; i < n; ++i) {
         struct ACNetworkInterface *p = &rows[i];

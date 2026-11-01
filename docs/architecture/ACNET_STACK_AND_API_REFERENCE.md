@@ -8,7 +8,7 @@
 
 ## 1. Scope
 
-ACNet is AmigaChrome's independent networking subsystem for AmigaOS 3.2.3. It provides a classic `bsdsocket.library` application ABI, an AmigaChrome-native `acnetwork.library`, `acnet.device`, a SANA-II packet facade, Wi-Fi control, BPF packet capture and the ACNet virtual Zorro-II board.
+ACNet is AmiCradle's independent networking subsystem for AmigaOS 3.2.3. It provides a classic `bsdsocket.library` application ABI, an AmiCradle-native `acnetwork.library`, `acnet.device`, a SANA-II packet facade, Wi-Fi control, BPF packet capture and the ACNet virtual Zorro-II board.
 
 Roadshow and AmiTCP are compatibility targets, not dependencies. HostSocket is ACNet's current provider/backend for host networking. Linux supplies low-level TCP/IP execution; ACNet owns the guest ABI, descriptors, waits/signals, errors, DNS compatibility, state/control model, packet interface and policy.
 ## 2. Architecture
@@ -210,7 +210,7 @@ The ACTCPTools suite consists of:
 The tools are installed under `SYS:Tools/ACNetwork Tools/` to avoid overwriting similarly named third-party commands. They remain usable from Shell by path/assign/alias policy chosen by the user.
 ## 13. Installation and Cradle contract
 
-AmigaChrome vendors a self-contained OS3 guest payload under `vendor/acnet-os32`. Its format-2 manifest records SHA-256, size, guest install destination and Amiga protection bits for 14 production files. Qualification probes are carried separately and are not installed as production commands.
+AmiCradle vendors a self-contained OS3 guest payload under `vendor/acnet-os32`. Its format-2 manifest records SHA-256, size, guest install destination and Amiga protection bits for 14 production files. Qualification probes are carried separately and are not installed as production commands.
 
 The transactional installer `scripts/acnet_guest.py`:
 
@@ -219,7 +219,7 @@ The transactional installer `scripts/acnet_guest.py`:
 3. refuses to replace guest symlinks;
 4. updates an older ACNet installation;
 5. refuses a foreign `LIBS:bsdsocket.library` without writing anything;
-6. atomically replaces files and updates `.amigachrome-meta.json`;
+6. atomically replaces files and updates `.amicradle-meta.json`;
 7. rolls files and metadata back if any step fails.
 
 Cradle's hardware save path checks this payload when an AmigaOS 3.x instance has networking enabled. A required install/update is allowed only while that guest is stopped. AROS is not given the OS3 ACNet payload because it retains its own stack.

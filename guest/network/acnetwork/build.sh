@@ -16,6 +16,6 @@ mkdir -p "$OUT"
 BARE="-m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -include sys/types.h -fomit-frame-pointer -fno-toplevel-reorder -fno-builtin -Wall -Wno-pointer-sign -nostartfiles -nostdlib"
 INC="-I$GUEST/common/protocol -I$HERE/include -I$ACNET/include"
 
-"$CC" $BARE $INC -I"$HERE/library" -o "$OUT/opensocket.library" \
+"$CC" $BARE $INC -I"$HERE/library" -o "$OUT/gfopensocket.library" \
   "$HERE/library/acnetwork.c" -lgcc
-echo "$OUT/opensocket.library ($(wc -c < "$OUT/opensocket.library") bytes)"
+echo "$OUT/gfopensocket.library ($(wc -c < "$OUT/gfopensocket.library") bytes)"

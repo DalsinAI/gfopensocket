@@ -194,7 +194,7 @@ LONG bsd_bpf_read(struct SocketBase *sb, LONG channel, APTR buffer, LONG len)
 }
 static int name_is_acnet0(const char *s)
 {
-    static const char n[] = "opensocket0";
+    static const char n[] = "gfopensocket0";
     int i;
     if (!s) return 0;
     for (i=0;i<6;i++) if (s[i] != n[i]) return 0;

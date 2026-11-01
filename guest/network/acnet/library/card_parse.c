@@ -1,4 +1,4 @@
-/* OpenSocket's card layer: the configuration files' lines (card.c reads
+/* GFOpenSocket's card layer: the configuration files' lines (card.c reads
  * the files). Plain C with no Amiga calls, so tests/host/card_parse_test.c
  * runs it on the build machine. MIT. */
 #include <exec/types.h>
@@ -64,7 +64,7 @@ static void add_ns(struct CardConfig *cfg, ULONG ip)
     }
 }
 
-/* One file's lines into cfg. ours: OpenSocket's own file (all keywords);
+/* One file's lines into cfg. ours: GFOpenSocket's own file (all keywords);
  * else a Roadshow file (its documented interface keywords and nameserver). */
 LONG card_parse(struct CardConfig *cfg, const char *b, LONG n, int ours)
 {

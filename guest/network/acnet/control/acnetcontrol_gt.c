@@ -1,10 +1,10 @@
 /*
- * OpenSocketControl - the OpenSocket Commodity, in GadTools (AmigaOS 2.04
+ * GFOpenSocketControl - the GFOpenSocket Commodity, in GadTools (AmigaOS 2.04
  * and later; AmigaOS 3.x programs are GadTools or MUI).
  *
  * Five pages from acnetcontrol_core.c: Status, Wi-Fi, Connections,
  * Diagnostics and Log, under a row of tabs drawn as MUI's Register class
- * draws them (1.0.1; the same tabs as OpenLook's editors); each page is drawn
+ * draws them (1.0.1; the same tabs as GFOpenLook's editors); each page is drawn
  * as ridged groups with their lines, input fields, a list and buttons. While
  * the window is active the page refreshes itself every 3 seconds. The
  * window follows the screen's font (Topaz 8 when that would not fit the
@@ -37,7 +37,7 @@
 
 struct Library *GadToolsBase;
 
-#define VERSION_TEXT "OpenSocketControl 1.0.2 (12.10.2026)"   /* 1.0.2: addresses in the right order */
+#define VERSION_TEXT "GFOpenSocketControl 1.0.2 (12.10.2026)"   /* 1.0.2: addresses in the right order */
 static const char version[] __attribute__((used)) = "$VER: " VERSION_TEXT;
 
 enum { GID_PAGES = GID_FIRST_FREE, GID_STATUS, GID_COUNT };
@@ -463,7 +463,7 @@ static void draw_static(void)
         frame.y += title_band / 2;
         frame.h -= title_band / 2;
         ridge(rp, &frame);
-        /* the title sits in a gap in the ridge, cleared in the window's own colour (OpenLook's) */
+        /* the title sits in a gap in the ridge, cleared in the window's own colour (GFOpenLook's) */
         EraseRect(rp, ga[k].x + (ga[k].w - tw) / 2 - 4, ga[k].y, ga[k].x + (ga[k].w + tw) / 2 + 3, ga[k].y + fh - 1);
         say(rp, ga[k].x + (ga[k].w - tw) / 2, ga[k].y, grp->title, text);
         for (i = 0; i < ACNC_MAX_LINES && grp->line[i]; ++i)
@@ -581,8 +581,8 @@ static void show_window(void)
     w = 2 * MARGIN + 12 + nat_w;
     h = 2 * MARGIN + line_h + PAD + TAB_LIFT + line_h + 2 + PAD + nat_h + PAD + 4 + PAD + line_h + 4;
     win = OpenWindowTags(NULL,
-        WA_Title, (ULONG)"OpenSocketControl",
-        WA_ScreenTitle, (ULONG)"OpenSocket - networking for the Amiga",
+        WA_Title, (ULONG)"GFOpenSocketControl",
+        WA_ScreenTitle, (ULONG)"GFOpenSocket - networking for the Amiga",
         WA_PubScreen, (ULONG)scr,
         WA_InnerWidth, w, WA_InnerHeight, h,
         WA_Left, (scr->Width - w) / 2, WA_Top, (scr->Height - h) / 2,
@@ -609,7 +609,7 @@ static void set_page(int p)
 
 static BOOL confirm(const char *text)
 {
-    struct EasyStruct es = { sizeof(struct EasyStruct), 0, "OpenSocketControl", (UBYTE *)text, "Proceed|Cancel" };
+    struct EasyStruct es = { sizeof(struct EasyStruct), 0, "GFOpenSocketControl", (UBYTE *)text, "Proceed|Cancel" };
     return EasyRequestArgs(win, &es, NULL, NULL) == 1;
 }
 
@@ -634,8 +634,8 @@ static void press(ULONG id)
 
 static void about(void)
 {
-    struct EasyStruct es = { sizeof(struct EasyStruct), 0, "OpenSocketControl",
-        VERSION_TEXT "\n\nThe OpenSocket Commodity.\nNetworking runs without it.", "OK" };
+    struct EasyStruct es = { sizeof(struct EasyStruct), 0, "GFOpenSocketControl",
+        VERSION_TEXT "\n\nThe GFOpenSocket Commodity.\nNetworking runs without it.", "OK" };
     EasyRequestArgs(win, &es, NULL, NULL);
 }
 
@@ -730,7 +730,7 @@ static int control_main(void)
 
     GadToolsBase = OpenLibrary("gadtools.library", 37);
     if (!GadToolsBase) {
-        PutStr("OpenSocketControl: needs gadtools.library 37 (AmigaOS 2.04 or later).\n");
+        PutStr("GFOpenSocketControl: needs gadtools.library 37 (AmigaOS 2.04 or later).\n");
         return 20;
     }
     for (i = 0; i < ACNC_PAGES; ++i) page_names[i] = (STRPTR)acnc_page[i].name;
@@ -738,7 +738,7 @@ static int control_main(void)
     i = acnc_broker_open();
     if (i != 1) {
         /* ACNC_ALREADY_RUNNING: Exchange has told that copy to show itself. */
-        if (i != ACNC_ALREADY_RUNNING) PutStr("OpenSocketControl: could not start the Commodity.\n");
+        if (i != ACNC_ALREADY_RUNNING) PutStr("GFOpenSocketControl: could not start the Commodity.\n");
         acnc_broker_close();
         acnc_close();
         CloseLibrary(GadToolsBase);

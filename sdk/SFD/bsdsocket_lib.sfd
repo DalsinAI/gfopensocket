@@ -1,5 +1,5 @@
-==id OpenSocket bsdsocket_lib.sfd
-* bsdsocket.library's calls: OpenSocket's classic table and its extensions,
+==id GFOpenSocket bsdsocket_lib.sfd
+* bsdsocket.library's calls: GFOpenSocket's classic table and its extensions,
 * written from its ABI manifests by sdk/tools/mksfd.py. Do not edit.
 * Copyright (c) 2026 DalsinAI. MIT licence (see LICENSE).
 ==base _SocketBase

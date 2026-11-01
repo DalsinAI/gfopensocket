@@ -1,5 +1,5 @@
 /* The card layer's configuration lines (library/card_parse.c), run on the
- * build machine: OpenSocket's own ENV:OpenSocket/Interface, a Roadshow
+ * build machine: GFOpenSocket's own ENV:GFOpenSocket/Interface, a Roadshow
  * DEVS:NetInterfaces/ file (its documented keywords) and
  * DEVS:Internet/name_resolution. MIT.
  *   cc -Iinclude -I../../library card_parse_test.c ../../library/card_parse.c */
@@ -23,7 +23,7 @@ int main(void)
     struct CardConfig c;
     LONG got;
 
-    got = run(&c, "# OpenSocket\nbackend=host\n", 1);
+    got = run(&c, "# GFOpenSocket\nbackend=host\n", 1);
     CHECK(got == GOT_BACKEND && c.backend == BACKEND_HOST);
 
     got = run(&c, "Backend = Direct\r\nDEVICE=prism2.device\nunit=1\naddress=192.168.1.20\n"
@@ -41,7 +41,7 @@ int main(void)
     CHECK(got == 0);
 
     /* a Roadshow interface file: device, unit, configure=dhcp; backend and
-     * gateway are OpenSocket's keywords, not read from it */
+     * gateway are GFOpenSocket's keywords, not read from it */
     got = run(&c, "device=a2065.device\nunit=0\nconfigure=dhcp\ndowngoesoffline=yes\nbackend=host\ngateway=10.0.0.1\n", 0);
     CHECK(got == GOT_DEVICE && !strcmp(c.device, "a2065.device") && c.dhcp && c.backend == BACKEND_NONE && !c.gateway);
     got = run(&c, "device=\"DEVS:Networks/plipbox.device\"\naddress=10.0.0.5\nnetmask=255.0.0.0", 0);
@@ -70,11 +70,11 @@ int main(void)
     }
 
     /* version strings: a RomTag's IdString, and a file's $VER after "$VER: " */
-    CHECK(card_version("opensocket.device 1.1 (16.10.2026) OpenSocket\r\n", 40) == (1UL << 16 | 1));
-    CHECK(card_version("opensocket.library 1.12 (x)", 27) == (1UL << 16 | 12));
-    CHECK(card_version("opensocket.device 2", 19) == 0);
-    CHECK(card_version("opensocket.device", 17) == 0);
-    CHECK(card_version("opensocket.device 3.0", 21) == (3UL << 16));
+    CHECK(card_version("gfopensocket.device 1.1 (16.10.2026) GFOpenSocket\r\n", 42) == (1UL << 16 | 1));
+    CHECK(card_version("gfopensocket.library 1.12 (x)", 29) == (1UL << 16 | 12));
+    CHECK(card_version("gfopensocket.device 2", 21) == 0);
+    CHECK(card_version("gfopensocket.device", 19) == 0);
+    CHECK(card_version("gfopensocket.device 3.0", 23) == (3UL << 16));
 
     printf("card_parse: %s (%d failed)\n", fails ? "FAIL" : "PASS", fails);
     return fails != 0;

@@ -3,7 +3,7 @@ name: host tests
 # What runs without the NDK (which is not redistributed): the card layer's
 # configuration parser (guest/network/acnet/tests/host), the vector table
 # generated from the ABI manifest, and the build scripts' syntax. The m68k
-# builds and bsdqual run on an AmigaChrome lab.
+# builds and bsdqual run on an AmiCradle lab.
 on:
   workflow_dispatch:
   pull_request:

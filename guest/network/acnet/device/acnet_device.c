@@ -1,4 +1,4 @@
-/* acnet.device: the one driver for ACNet, AmigaChrome's network card
+/* acnet.device: the one driver for ACNet, AmiCradle's network card
  * (Zorro II, AmigaChrome Team product 6; common/protocol/achostsocket.h).
  *
  * It finds the card through expansion.library and claims it, says hello to
@@ -89,7 +89,7 @@ int start(void) { return -1; }
 
 /* ACNET_DEVICE_NODE_NAME may name it otherwise at build time (-D), so a
  * test can install it in DEVS:Networks/ as a SANA-II driver that is not
- * OpenSocket's own (the card layer's Direct test). */
+ * GFOpenSocket's own (the card layer's Direct test). */
 #ifndef ACNET_DEVICE_NODE_NAME
 #define ACNET_DEVICE_NODE_NAME OPENSOCKET_DEVICE_NAME
 #endif
@@ -102,8 +102,8 @@ static const char dev_name[] = ACNET_DEVICE_NODE_NAME;
 #define DEV_STR2(x) #x
 #define DEV_STR(x) DEV_STR2(x)
 #define DEV_VR DEV_STR(ACNET_DEVICE_VERSION) "." DEV_STR(ACNET_DEVICE_REVISION)
-static const char dev_id[] = "opensocket.device " DEV_VR " (16.10.2026) OpenSocket (AmigaChrome)\r\n";
-static const char ver[] __attribute__((used)) = "$VER: opensocket.device " DEV_VR " (16.10.2026) OpenSocket (AmigaChrome)";
+static const char dev_id[] = "gfopensocket.device " DEV_VR " (16.10.2026) GFOpenSocket (AmiCradle)\r\n";
+static const char ver[] __attribute__((used)) = "$VER: gfopensocket.device " DEV_VR " (16.10.2026) GFOpenSocket (AmiCradle)";
 
 #define R(off) (*(volatile ULONG *)(b->card + (off)))
 
@@ -499,7 +499,7 @@ static void start_card(struct ACNetBase *b)
     R(ACHS_REG_IRQ_ENABLE) = 1;
     packet_info(b);
     if (!b->packet_task)
-        b->packet_task = create_packet_task((STRPTR)"opensocket.packet", 5, packet_worker, 8192, b);
+        b->packet_task = create_packet_task((STRPTR)"gfopensocket.packet", 5, packet_worker, 8192, b);
 }
 
 static void stop_card(struct ACNetBase *b)
@@ -971,7 +971,7 @@ const struct Resident dev_romtag = {
     RTC_MATCHWORD, (struct Resident *)&dev_romtag, (APTR)(&dev_romtag + 1),
     /* No start class: in the open ROM (amigachrome-guest) nothing starts it
      * at boot. bsdsocket.library's card layer starts it after DOS when the
-     * card is fitted and no newer opensocket.device is on the disk (card.c);
-     * then "DEVS:Networks/opensocket.device" opens it from memory. */
+     * card is fitted and no newer gfopensocket.device is on the disk (card.c);
+     * then "DEVS:Networks/gfopensocket.device" opens it from memory. */
     RTF_AUTOINIT, ACNET_DEVICE_VERSION, NT_DEVICE, -120, (char *)dev_name, (char *)dev_id, (APTR)&dev_inittable,
 };
