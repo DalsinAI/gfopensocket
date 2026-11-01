@@ -16,8 +16,8 @@
 int start(void) { return -1; }
 
 static const char lib_name[] = "bsdsocket.library";
-static const char lib_id[] = "bsdsocket.library 4.4 (15.10.2026) OpenSocket (AmigaChrome)\r\n";
-static const char lib_ver[] __attribute__((used)) = "$VER: bsdsocket.library 4.4 (15.10.2026) OpenSocket (AmigaChrome)";
+static const char lib_id[] = "bsdsocket.library 4.99 (1.11.2026) OpenSocket (AmigaChrome) lab proof\r\n";
+static const char lib_ver[] __attribute__((used)) = "$VER: bsdsocket.library 4.99 (1.11.2026) OpenSocket (AmigaChrome) lab proof";
 
 extern const APTR acnet_vectors[];
 
