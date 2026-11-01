@@ -1,5 +1,6 @@
 /* httpget: a file from a web server.
  *   httpget URL                saves it under the last part of its path
+ *                              (the URL's as typed, not a redirect's)
  *   httpget -o file URL        saves it as file (-o - shows it)
  *   httpget -I URL             only the server's headers
  *   httpget -q ...             no progress
@@ -201,17 +202,23 @@ static int follow(const struct url *u, const char *loc, struct url *next)
     return 1;
 }
 
+/* The last part of u's path (before any query) as a plain name in the current
+ * drawer: a ':' would name a volume or assign (/S:User-Startup), so it and
+ * control characters become '_'; nothing usable gives index.html. */
 static const char *default_name(const struct url *u)
 {
     static char name[108];
-    const char *p = u->path, *q = strrchr(p, '/');
-    size_t n;
-    q = q ? q + 1 : p;
-    n = strcspn(q, "?");
-    if (!n) return "index.html";
+    const char *p = u->path, *q;
+    size_t len = strcspn(p, "?"), n, i;
+    for (q = p + len; q > p && q[-1] != '/'; --q) ;
+    n = (size_t)(p + len - q);
     if (n >= sizeof(name)) n = sizeof(name) - 1;
-    memcpy(name, q, n);
+    for (i = 0; i < n; ++i) {
+        unsigned char c = (unsigned char)q[i];
+        name[i] = c == ':' || c == '/' || c < 0x20 || (c >= 0x7f && c < 0xa0) ? '_' : (char)c;
+    }
     name[n] = 0;
+    if (!n || !strcmp(name, ".") || !strcmp(name, "..")) return "index.html";
     return name;
 }
 
@@ -280,6 +287,8 @@ static int httpget_main(int argc, char **argv)
         fprintf(stderr, "Usage: httpget [-q] [-I] [-o file|-] http[s]://host[:port]/path\n");
         return 20;
     }
+    /* named from the URL as typed, not from where a redirect leads (as curl -O, wget) */
+    if (!to) to = default_name(&u);
     if (!ost_open("httpget")) return 20;
 
     for (hops = 0; hops <= 5; ++hops) {
@@ -324,7 +333,6 @@ static int httpget_main(int argc, char **argv)
     }
     if (hops > 5) { fprintf(stderr, "httpget: too many redirects\n"); goto out; }
 
-    if (!to) to = default_name(&u);
     out_fh = !strcmp(to, "-") ? Output() : Open((STRPTR)to, MODE_NEWFILE);
     if (!out_fh) { fprintf(stderr, "httpget: cannot write %s\n", to); goto out; }
     if (body(chunked)) {
