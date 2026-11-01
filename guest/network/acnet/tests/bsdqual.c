@@ -7,6 +7,7 @@
 #include <exec/libraries.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
+#include <dos/dostags.h>
 #include <proto/bsdsocket.h>
 #include <libraries/bsdsocket.h>
 #include <sys/types.h>
@@ -318,6 +319,102 @@ out:
     closes(ss); closes(rs);
 }
 
+/* Another task's traffic: its sends make card events, and the card's event
+ * wakes every waiting task on the machine. It arms the card for its socket
+ * (a poll that finds nothing), sends itself a datagram, and reads it. */
+static struct Task *traffic_parent;
+static ULONG traffic_done;
+static volatile LONG traffic_stop;
+
+static void traffic_child(void)
+{
+    struct Library *SocketBase = OpenLibrary("bsdsocket.library", 4);
+    if (SocketBase) {
+        LONG b = socket(AF_INET,SOCK_DGRAM,0), c = socket(AF_INET,SOCK_DGRAM,0), nb = 1, i;
+        struct sockaddr_in a;
+        fd_set rf;
+        struct timeval z;
+        char buf[8];
+        memset(&a,0,sizeof(a));
+        a.sin_len=sizeof(a); a.sin_family=AF_INET; a.sin_port=htons(23453);
+        a.sin_addr.s_addr=inet_addr("127.0.0.1");
+        if (b>=0 && c>=0 && bind(b,(struct sockaddr*)&a,sizeof(a))==0 && IoctlSocket(b,FIONBIO,&nb)==0) {
+            for (i=0; i<60 && !traffic_stop; i++) {
+                FD_ZERO(&rf); FD_SET(b,&rf); z.tv_secs=0; z.tv_micro=0;
+                WaitSelect(b+1,&rf,NULL,NULL,&z,NULL);
+                sendto(c,"tick",4,0,(struct sockaddr*)&a,sizeof(a));
+                Delay(5);
+                recv(b,buf,sizeof(buf),0);
+            }
+        }
+        if (c>=0) CloseSocket(c);
+        if (b>=0) CloseSocket(b);
+        CloseLibrary(SocketBase);
+    }
+    Forbid();
+    Signal(traffic_parent, traffic_done);
+}
+
+static LONG ticks_since(const struct DateStamp *t0)
+{
+    struct DateStamp t1;
+    DateStamp(&t1);
+    return ((t1.ds_Days-t0->ds_Days)*1440 + (t1.ds_Minute-t0->ds_Minute))*TICKS_PER_SECOND*60 + (t1.ds_Tick-t0->ds_Tick);
+}
+
+/* A timeout is a deadline for the whole call, however many card events
+ * wake the wait (1 Nov 2026: each event started the timeout again, so with
+ * other traffic these waits never ended, and WaitSelect on no sockets ended
+ * at the first event). Each wait asks for 1 s while the traffic runs. */
+static void test_deadlines(void)
+{
+    BYTE done = AllocSignal(-1);
+    LONG s = -1, r, t;
+    struct sockaddr_in a;
+    struct DateStamp t0;
+    struct timeval tv;
+    fd_set rf;
+    char buf[4];
+
+    if (done < 0) { result("traffic task", 0); return; }
+    traffic_parent = FindTask(NULL); traffic_done = 1UL << done; traffic_stop = 0;
+    if (!CreateNewProcTags(NP_Entry,(ULONG)traffic_child, NP_Name,(ULONG)"bsdqual traffic",
+                           NP_StackSize,16384, TAG_END)) {
+        result("traffic task", 0); FreeSignal(done); return;
+    }
+    Delay(10);
+
+    tv.tv_secs=1; tv.tv_micro=0;
+    DateStamp(&t0);
+    r = WaitSelect(0,NULL,NULL,NULL,&tv,NULL);
+    t = ticks_since(&t0);
+    result("WaitSelect no sockets lasts 1 s", r==0 && t>=45 && t<100);
+
+    memset(&a,0,sizeof(a));
+    a.sin_len=sizeof(a); a.sin_family=AF_INET; a.sin_port=htons(23454);
+    a.sin_addr.s_addr=inet_addr("127.0.0.1");
+    s = socket(AF_INET,SOCK_DGRAM,0);
+    if (s>=0 && bind(s,(struct sockaddr*)&a,sizeof(a))==0) {
+        FD_ZERO(&rf); FD_SET(s,&rf); tv.tv_secs=1; tv.tv_micro=0;
+        DateStamp(&t0);
+        r = WaitSelect(s+1,&rf,NULL,NULL,&tv,NULL);
+        t = ticks_since(&t0);
+        result("WaitSelect timeout under traffic", r==0 && t>=45 && t<100);
+
+        tv.tv_secs=1; tv.tv_micro=0;
+        setsockopt(s,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv));
+        DateStamp(&t0);
+        r = recv(s,buf,sizeof(buf),0);
+        t = ticks_since(&t0);
+        result("SO_RCVTIMEO under traffic", r<0 && t>=45 && t<100);
+    } else result("WaitSelect timeout under traffic", 0);
+
+    traffic_stop = 1;
+    Wait(traffic_done);
+    FreeSignal(done);
+    closes(s);
+}
+
 static void test_descriptor_handoff(void)
 {
     LONG s=-1, id=-1, o=-1;
@@ -376,6 +473,7 @@ static int bsdqual_main(int argc, char **argv)
     test_basics();
     test_tcp();
     test_udp();
+    test_deadlines();
     test_descriptor_handoff();
     test_errors();
     test_churn();
