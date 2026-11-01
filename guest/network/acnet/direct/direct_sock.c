@@ -296,7 +296,10 @@ static LONG c_accept(struct DSock *s, UBYTE *rx, ULONG rxmax, ULONG *rxlen, ULON
     s->acn--;
     if (!a) { *err = E_CONNABORTED; return -1; }
     a->hidden = 0;
-    if (s->pcb.tcp) tcp_backlog_accepted(a->pcb.tcp);
+    /* A peer that reset before this ACCEPT has had its pcb freed by lwIP
+     * (tcp_err_cb NULLed it; freeing it gave its backlog slot back). It is
+     * still handed out, as BSD stacks do: its first read gives ECONNRESET. */
+    if (s->pcb.tcp && a->pcb.tcp) tcp_backlog_accepted(a->pcb.tcp);
     sa_out(sa, a->pcb.tcp ? &a->pcb.tcp->remote_ip : NULL, a->pcb.tcp ? a->pcb.tcp->remote_port : 0);
     if (rx) CopyMem(sa, rx, rxmax < 16 ? rxmax : 16);
     if (rxlen) *rxlen = 16;
