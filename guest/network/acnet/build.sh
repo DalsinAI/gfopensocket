@@ -7,7 +7,7 @@
 # Amiga BSD socket ABI manifest; no third-party socket SFD is required.
 # bsdqual links common/os3/acnet_stack.c: this libnix ignores __stack, so it
 # swaps to a stack of its own.
-#   network/acnet/build.sh [OUT_DIR]     (default build/guest/os32/acnet)
+#   network/acnet/build.sh [OUT_DIR]     (default OUT=, else build/guest/os32/acnet)
 #   network/acnet/build.sh module        only bsdsocket.library for a ROM:
 #     $OUT/modules/bsdsocket.module (OUT= or build-amiga/), RTF_AUTOINIT and
 #     no start class, so ramlib makes it at the first OpenLibrary; built
@@ -29,7 +29,7 @@ fi
 CC="$STOVE/prefix/bin/m68k-amigaos-gcc"
 ABI="$HERE/abi/bsdsocket-v4.json"
 GUARD="$HERE/compat/roadshow/guard-v4.json"
-if [ "$TARGET" = module ]; then OUT=${OUT:-$HERE/build-amiga}; else OUT=${1:-$GUEST/build/guest/os32/acnet}; fi
+if [ "$TARGET" = module ]; then OUT=${OUT:-$HERE/build-amiga}; else OUT=${1:-${OUT:-$GUEST/build/guest/os32/acnet}}; fi
 mkdir -p "$OUT"
 BARE="-m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -include sys/types.h -fomit-frame-pointer -fno-toplevel-reorder -fno-builtin -Wall -Wno-pointer-sign -nostartfiles -nostdlib"
 INC="-I$GUEST/common/protocol -I$HERE/include -I$GUEST/network/acnetwork/include"
