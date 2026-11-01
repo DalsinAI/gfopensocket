@@ -1,6 +1,6 @@
 Short:        Free bsdsocket.library and net tools
 Uploader:     (We fill this in at upload time)
-Author:       AmigaChrome Team
+Author:       AmiCradle Team
 Type:         comm/tcp
 Version:      1.0
 Requires:     AmigaOS 3.2.3, an AmiCradle machine (see below)
@@ -42,9 +42,9 @@ bsdsocket.library. On an older install it falls back to acnet.device.
 
 Licence
 -------
-MIT. Copyright (c) 2026 AmigaChrome Team. Use it, change it, fork it and
+MIT. Copyright (c) 2026 AmiCradle Team. Use it, change it, fork it and
 pass it on, free; the copyright and licence notice stays with every
-copy. If you fork it, please say it is based on GFOpenSocket by the AmigaChrome
+copy. If you fork it, please say it is based on GFOpenSocket by the AmiCradle
 Team (a request, not a condition).
 
 ping, traceroute and arp come from 4.4BSD-Lite2 through Olaf Barthel's

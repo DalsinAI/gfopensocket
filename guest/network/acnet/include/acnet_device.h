@@ -3,7 +3,7 @@
 
 /*
  * gfopensocket.device's private calls: the one driver for the GFOpenSocket card
- * (formerly ACNet; Zorro II, AmigaChrome Team product 6; common/protocol/achostsocket.h).
+ * (formerly ACNet; Zorro II, AmiCradle Team product 6; common/protocol/achostsocket.h).
  * gfopensocket.library opens the device and calls these vectors directly, with
  * no I/O request per call. Design: OPENSOCKET_DESIGN.md in DalsinAI/amigachrome.
  *

@@ -362,11 +362,11 @@ static void make_status_strings(void)
         strcpy(status_bottom,  "No ACNet card - enable Network in Cradle and reboot");
     } else if (!(state & ACNETWORK_STATE_ONLINE)) {
         strcpy(status_network, "Network       Offline");
-        strcpy(status_card,    "Card          ACNet - AmigaChrome Team product 6 - HostSocket");
+        strcpy(status_card,    "Card          ACNet - AmiCradle Team product 6 - HostSocket");
         strcpy(status_bottom,  "ACNet is offline - use Go online or enable Network in Cradle");
     } else {
         strcpy(status_network, "Network       Online");
-        strcpy(status_card,    "Card          ACNet - AmigaChrome Team product 6 - HostSocket");
+        strcpy(status_card,    "Card          ACNet - AmiCradle Team product 6 - HostSocket");
         strcpy(status_bottom,  "Live ACNet status - Refresh updates counters and connections");
     }
 

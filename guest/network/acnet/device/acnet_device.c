@@ -1,5 +1,5 @@
 /* acnet.device: the one driver for ACNet, AmiCradle's network card
- * (Zorro II, AmigaChrome Team product 6; common/protocol/achostsocket.h).
+ * (Zorro II, AmiCradle Team product 6; common/protocol/achostsocket.h).
  *
  * It finds the card through expansion.library and claims it, says hello to
  * the host (dropping the last boot's sockets), adds one server to the INT2

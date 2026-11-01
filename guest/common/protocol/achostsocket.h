@@ -5,7 +5,7 @@
  * ACNet, the network card, and its HostSocket v1 block: the Amiga's sockets,
  * carried out by the Linux host.
  *
- * The card is a 64 KiB Zorro II AutoConfig I/O board: manufacturer AmigaChrome Team
+ * The card is a 64 KiB Zorro II AutoConfig I/O board: manufacturer AmiCradle Team
  * (0xDA15; 2011 for boot ROMs from before it, as ACBridge), product 6, the
  * number main reserved for networking. It is fitted while the instance's
  * Network switch is on, from the next reset. HostSocket's block starts at the

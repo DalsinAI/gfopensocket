@@ -10,7 +10,7 @@
  *        device: Direct, GFOpenSocket's own stack over that device;
  *     c. a SANA-II driver in DEVS:Networks/ other than GFOpenSocket's own
  *        (gfopensocket*.device, acnet.device): Direct over its unit 0.
- *  2. The default: the GFOpenSocket card is fitted (Zorro II, AmigaChrome Team,
+ *  2. The default: the GFOpenSocket card is fitted (Zorro II, AmiCradle Team,
  *     product 6): Host, through gfopensocket.library and gfopensocket.device.
  *     Each is the ROM's copy, unless the disk's (LIBS:gfopensocket.library,
  *     DEVS:Networks/gfopensocket.device) has a higher version.revision; on
@@ -157,7 +157,7 @@ static int one_driver(struct DosLibrary *DOSBase, struct Work *w, struct CardCon
     return 1;
 }
 
-/* The GFOpenSocket card (Zorro II, AmigaChrome Team or the old 2011, product 6). */
+/* The GFOpenSocket card (Zorro II, AmiCradle Team or the old 2011, product 6). */
 static int card_fitted(void)
 {
     struct Library *ExpansionBase = OpenLibrary((CONST_STRPTR)"expansion.library", 0);
