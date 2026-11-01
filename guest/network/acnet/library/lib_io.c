@@ -29,6 +29,7 @@ LONG bsd_recv(struct SocketBase *sb,LONG s,APTR buf,LONG len,LONG flags)
 LONG bsd_sendto(struct SocketBase *sb,LONG s,APTR buf,LONG len,LONG flags,struct sockaddr *to,socklen_t tolen)
 {
     struct FD *f=fd_get(sb,s); UBYTE *x=scratch(sb); if(!f||!x)return -1; if(len<0||!to||tolen>16)return fail(sb,AE_INVAL);
+    if((ULONG)len>ACHS_TX_SIZE-16)return fail(sb,AE_MSGSIZE);   /* the address and the data must fit the card's transmit buffer (and scratch), as sendmsg checks */
     CopyMem(to,x,tolen); CopyMem(buf,x+16,len); for(;;){LONG r=prov_call(sb,ACHS_CMD_SENDTO,f->handle,flags,0,0,x,16+len,NULL,0,NULL); if(r>=0)return r;
       if(sb->last_err!=AE_AGAIN||f->nonblock)return fail_provider(sb);
       if(io_wait(sb,f,ACHS_POLLOUT,1)<0)return -1;}
