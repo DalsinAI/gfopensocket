@@ -4,9 +4,9 @@
 
 - **SacredTrees** ([@SacredTrees](https://github.com/SacredTrees)): created GFOpenSocket, designs it and maintains it.
 
-## The AmigaChrome team
+## The AmiCradle team
 
-We are The AmigaChrome Team, who build GFOpenSocket alongside SacredTrees:
+We are The AmiCradle Team, who build GFOpenSocket alongside SacredTrees:
 
 - **Agnus**, our coordinator, who keeps every thread moving.
 - **Thufir**, **Kynes** and **Galen**, who started the work on SacredTrees's x86 cores. Thufir also wrote GFOpenSocket's first `bsdsocket.library`, when the project was ACNet (`DalsinAI/Amigachrome-ACNet`).
@@ -15,7 +15,7 @@ We are The AmigaChrome Team, who build GFOpenSocket alongside SacredTrees:
 ## Copyright holder
 
 GFOpenSocket's own code (the libraries, the device, the Commodity and the tools) and documents are
-Copyright (c) 2026 AmigaChrome Team, released under the MIT licence (`LICENSE`).
+Copyright (c) 2026 AmiCradle Team, released under the MIT licence (`LICENSE`).
 
 ## Third-party work in this repository
 
@@ -35,7 +35,7 @@ The other tools are our own and none is derived from another implementation.
 ## Used at build or run time, not included
 
 - **libslirp**: the packet provider behind the SANA-II path, on the x86 and ARM64 side.
-- **GFOpenTLS** (`gfopentls.library`, the AmigaChrome Team's, MIT): `httpget` opens it at run time for https (AmiSSL 5 until 19 October 2026). `tools/actcptools/third_party/opentls` holds a copy of its API headers.
+- **GFOpenTLS** (`gfopentls.library`, the AmiCradle Team's, MIT): `httpget` opens it at run time for https (AmiSSL 5 until 19 October 2026). `tools/actcptools/third_party/opentls` holds a copy of its API headers.
 - **AmigaOS NDK**: headers and libraries for the build, supplied separately and not redistributed.
 
 Amiga, AmigaOS and other product names are trademarks of their respective

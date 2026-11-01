@@ -4,7 +4,7 @@
 **Date:** 3 October 2026
 **Guest branch:** `feature/complete-stack-20261003`
 **Host/runtime branch:** `net/complete-stack-20261003`
-**Created by:** AmigaChrome Team, in collaboration with Thufir Hawat.
+**Created by:** AmiCradle Team, in collaboration with Thufir Hawat.
 
 ## 1. Scope
 
@@ -42,7 +42,7 @@ The application socket path does not require SANA-II. Packet-oriented software c
 | `acnetwork.library` 1.0 | Native per-opener ACNet session/control API. |
 | `acnet.device` 1.0 | ACNet board driver, event source and SANA-II packet device. |
 | `acwifi.device` 1.0 | Wi-Fi control facade using the native ACNet session API. |
-| ACNet card | AmigaChrome Team manufacturer $DA15, product 6, 64 KiB Zorro-II AutoConfig device. |
+| ACNet card | AmiCradle Team manufacturer $DA15, product 6, 64 KiB Zorro-II AutoConfig device. |
 | HostSocket | Per-instance host service: sockets, DNS, state, Wi-Fi, packet provider and BPF. |
 | ACNetControl | ReAction Commodity for status, connections, Wi-Fi, diagnostics and event log. |
 | ACTCPTools | hostname, resolve, ping, traceroute, arp, ifconfig, route, netstat and acnetctl. |
