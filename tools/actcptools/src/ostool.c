@@ -178,6 +178,56 @@ long ost_lines_take(struct ost_lines *l, char *out, long max)
     return n;
 }
 
+/* ---- saving a download (ostool.h) ---- */
+
+static int is_drawer(const char *name)
+{
+    struct FileInfoBlock *fib;
+    BPTR lock = Lock((STRPTR)name, SHARED_LOCK);
+    int dir = 0;
+    if (!lock) return 0;
+    if ((fib = AllocDosObject(DOS_FIB, NULL)) != NULL) {
+        if (Examine(lock, fib)) dir = fib->fib_DirEntryType > 0;
+        FreeDosObject(DOS_FIB, fib);
+    }
+    UnLock(lock);
+    return dir;
+}
+
+BPTR ost_save_open(struct ost_save *sv, const char *name)
+{
+    char part[16];
+    ULONG len = (ULONG)(PathPart((STRPTR)name) - (STRPTR)name);
+
+    sv->name = name;
+    sv->tmp[0] = 0;
+    if (!IsFileSystem((STRPTR)name)) return sv->fh = Open((STRPTR)name, MODE_NEWFILE);
+    if (is_drawer(name)) { SetIoErr(ERROR_OBJECT_WRONG_TYPE); return sv->fh = 0; }
+    if (len > sizeof(sv->tmp) - sizeof(part) - 2) { SetIoErr(ERROR_LINE_TOO_LONG); return sv->fh = 0; }
+    memcpy(sv->tmp, name, len);
+    sv->tmp[len] = 0;
+    /* short (FFS keeps 30 characters), and this task's own */
+    snprintf(part, sizeof(part), ".ost%08lx", (unsigned long)FindTask(NULL));
+    AddPart((STRPTR)sv->tmp, (STRPTR)part, sizeof(sv->tmp));
+    sv->fh = Open((STRPTR)sv->tmp, MODE_NEWFILE);
+    if (!sv->fh) sv->tmp[0] = 0;
+    return sv->fh;
+}
+
+int ost_save_close(struct ost_save *sv, int ok, const char *prog)
+{
+    if (sv->fh && !Close(sv->fh)) ok = 0;          /* the last write failed */
+    sv->fh = 0;
+    if (!sv->tmp[0]) return ok ? 0 : -1;
+    if (!ok) { DeleteFile((STRPTR)sv->tmp); return -1; }
+    DeleteFile((STRPTR)sv->name);                  /* Rename does not replace */
+    if (!Rename((STRPTR)sv->tmp, (STRPTR)sv->name)) {
+        fprintf(stderr, "%s: cannot replace %s; what was fetched is in %s\n", prog, sv->name, sv->tmp);
+        return -1;
+    }
+    return 0;
+}
+
 int ost_main(int (*body)(int, char **), int argc, char **argv)
 {
     return acnet_main_with_stack(body, argc, argv, 16384);
