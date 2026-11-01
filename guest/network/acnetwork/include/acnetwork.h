@@ -3,7 +3,7 @@
 
 #include <exec/types.h>
 
-#define ACNETWORK_LIBRARY_NAME "opensocket.library"   /* was acnetwork.library (4 Oct 2026) */
+#define ACNETWORK_LIBRARY_NAME "gfopensocket.library"   /* was acnetwork.library (4 Oct 2026) */
 #define ACNETWORK_LIBRARY_VERSION 1
 
 #define ACNETWORK_STATE_CARD   0x01

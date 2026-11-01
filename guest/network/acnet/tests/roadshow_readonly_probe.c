@@ -58,7 +58,7 @@ int main(void)
 
     SocketBase = OpenLibrary("bsdsocket.library", 4);
     if (!SocketBase) { printf("OPEN: FAIL\n"); return 20; }
-    printf("OpenSocket Roadshow read-only compatibility probe\n");
+    printf("GFOpenSocket Roadshow read-only compatibility probe\n");
     rc = SocketBaseTagList(caps);
     check(rc == 0, "capability query");
     check(have_route == 1, "routing API advertised");

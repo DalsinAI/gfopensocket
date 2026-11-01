@@ -1,4 +1,4 @@
-/* OpenSocketDirect: what direct_stack.c and direct_sock.c share. MIT. */
+/* GFOpenSocketDirect: what direct_stack.c and direct_sock.c share. MIT. */
 #ifndef OPENSOCKET_DIRECT_INT_H
 #define OPENSOCKET_DIRECT_INT_H
 

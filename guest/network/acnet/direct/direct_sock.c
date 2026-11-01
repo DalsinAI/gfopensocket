@@ -1,4 +1,4 @@
-/* OpenSocketDirect: the HostSocket commands (common/protocol/achostsocket.h)
+/* GFOpenSocketDirect: the HostSocket commands (common/protocol/achostsocket.h)
  * answered by lwIP's raw API, so bsdsocket.library's front end works the
  * same over Direct as over the bridge card. Nothing here blocks: a call
  * that would wait answers EAGAIN or EINPROGRESS, and the front end waits
@@ -697,7 +697,7 @@ LONG direct_command(ULONG cmd, ULONG a0, ULONG a1, ULONG a2, ULONG a3,
         struct netif *lo = netif_find("lo0");
         if (lo && n < max && (n + 1) * sizeof(r) <= rxmax) { put_if(&r, 1, lo, "lo0"); CopyMem(&r, rx, sizeof(r)); n++; }
         if (S.en_added && n < max && (n + 1) * sizeof(r) <= rxmax) {
-            put_if(&r, 2, &S.en, S.cfg.ifname[0] ? S.cfg.ifname : "opensocket0");
+            put_if(&r, 2, &S.en, S.cfg.ifname[0] ? S.cfg.ifname : "gfopensocket0");
             CopyMem(&r, rx + n * sizeof(r), sizeof(r)); n++;
         }
         if (rxlen) *rxlen = n * sizeof(r);

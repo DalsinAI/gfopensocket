@@ -1,9 +1,9 @@
 /*
- * RETIRED (4 Oct 2026): ACNet is now OpenSocket, and AmigaOS 3.x programs are
+ * RETIRED (4 Oct 2026): ACNet is now GFOpenSocket, and AmigaOS 3.x programs are
  * GadTools or MUI. This ReAction Commodity is no longer built. It stays as the
- * reference for the pages OpenSocketControl (acnetcontrol_gt.c) still has to
+ * reference for the pages GFOpenSocketControl (acnetcontrol_gt.c) still has to
  * gain: live control, DNS/TCP diagnostics, the event log, Wi-Fi. Delete it
- * once OpenSocketControl has them.
+ * once GFOpenSocketControl has them.
  */
 /*
  * ACNetControl - the ACNet ReAction Commodity for AmigaOS 3.2.3.
@@ -862,7 +862,7 @@ static BOOL create_window_object(void)
 
     win_obj = WindowObject,
         WA_Title, "ACNetControl",
-        WA_ScreenTitle, "ACNet - AmigaChrome networking",
+        WA_ScreenTitle, "ACNet - AmiCradle networking",
         WA_Activate, TRUE,
         WA_DepthGadget, TRUE,
         WA_DragBar, TRUE,
@@ -875,7 +875,7 @@ static BOOL create_window_object(void)
             LAYOUT_DeferLayout, TRUE,
 
             LAYOUT_AddImage, LabelObject,
-                LABEL_Text, "ACNetControl - Network Configuration for AmigaChrome",
+                LABEL_Text, "ACNetControl - Network Configuration for AmiCradle",
             LabelEnd,
             CHILD_WeightedHeight, 0,
 
@@ -1036,7 +1036,7 @@ static BOOL create_broker(void)
     nb.nb_Version = NB_VERSION;
     nb.nb_Name = "ACNetControl";
     nb.nb_Title = "ACNet Network Control";
-    nb.nb_Descr = "Status and controls for AmigaChrome ACNet";
+    nb.nb_Descr = "Status and controls for AmiCradle ACNet";
     nb.nb_Unique = NBU_UNIQUE | NBU_NOTIFY;
     nb.nb_Flags = COF_SHOW_HIDE;
     nb.nb_Pri = 0;

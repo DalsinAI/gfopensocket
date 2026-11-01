@@ -1,6 +1,6 @@
 #!/bin/sh
-# OpenSocket (formerly ACNet, renamed 4 Oct 2026) for AmigaOS 3.2.3:
-# opensocket.device (DEVS:Networks/), opensocket.library (built by
+# GFOpenSocket (formerly ACNet, renamed 4 Oct 2026) for AmigaOS 3.2.3:
+# gfopensocket.device (DEVS:Networks/), gfopensocket.library (built by
 # ../acnetwork/build.sh) and the bsdsocket.library face (bare: no startup code
 # or C library), plus the test programs (libnix), with the os32 stove (bebbo's
 # m68k-amigaos-gcc, NDK 3.2). The library vector table is generated from its own classic
@@ -34,9 +34,9 @@ mkdir -p "$OUT"
 BARE="-m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -include sys/types.h -fomit-frame-pointer -fno-toplevel-reorder -fno-builtin -Wall -Wno-pointer-sign -nostartfiles -nostdlib"
 INC="-I$GUEST/common/protocol -I$HERE/include -I$GUEST/network/acnetwork/include"
 # The library itself and its tools use the kernel-side network headers
-# (net/route.h, net/bpf.h, sys/mbuf.h, netinet/*_var.h), which OpenNDK
+# (net/route.h, net/bpf.h, sys/mbuf.h, netinet/*_var.h), which GFOpenNDK
 # doesn't have yet (sdk/README.md); until it does, they build against the
-# vendor NDK the stoves keep beside it, as before the stoves took OpenNDK.
+# vendor NDK the stoves keep beside it, as before the stoves took GFOpenNDK.
 if [ -d "$STOVE/prefix/m68k-amigaos/ndk-include.vendor" ]; then
   VENDOR_NDK="-I$STOVE/prefix/m68k-amigaos/ndk-include.vendor"
 else
@@ -80,8 +80,8 @@ if [ "$TARGET" = module ]; then
     exit 0
 fi
 
-"$CC" $BARE $INC $COMPAT_INC -o "$OUT/opensocket.device" "$HERE/device/acnet_device.c" "$GUEST/common/os3/string.c" -lgcc
-echo "$OUT/opensocket.device ($(wc -c < "$OUT/opensocket.device") bytes)"
+"$CC" $BARE $INC $COMPAT_INC -o "$OUT/gfopensocket.device" "$HERE/device/acnet_device.c" "$GUEST/common/os3/string.c" -lgcc
+echo "$OUT/gfopensocket.device ($(wc -c < "$OUT/gfopensocket.device") bytes)"
 
 STOVE="$STOVE" "$GUEST/network/acnetwork/build.sh" "$OUT"
 
@@ -132,10 +132,10 @@ if [ -f "$HERE/tests/directprobe.c" ]; then
     echo "$OUT/directprobe ($(wc -c < "$OUT/directprobe") bytes)"
 fi
 
-# OpenSocketControl: the Commodity, in GadTools on the shared core (AmigaOS
+# GFOpenSocketControl: the Commodity, in GadTools on the shared core (AmigaOS
 # 3.x programs are GadTools or MUI). control/acnetcontrol.c, the retired
 # ReAction version, is no longer built; it stays as the reference for the
-# pages OpenSocketControl still lacks (live control, diagnostics, log, Wi-Fi).
+# pages GFOpenSocketControl still lacks (live control, diagnostics, log, Wi-Fi).
 # -fno-common: the program's own library bases must win over libnix's
 # auto-open stubs.
 # No -lamiga here: the compiler already links amiga.lib after libnix (for
@@ -146,13 +146,13 @@ fi
 if [ -f "$HERE/control/acnetcontrol_gt.c" ]; then
     "$CC" -m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -fno-common -Wall -Wno-pointer-sign -noixemul -I"$HERE/include" \
         -I"$GUEST/network/acnetwork/include" -I"$GUEST/network/acwifi/include" \
-        -Wl,-Map="$OUT/OpenSocketControl.map" \
-        -o "$OUT/OpenSocketControl" "$HERE/control/acnetcontrol_gt.c" "$HERE/control/acnetcontrol_core.c"
-    if grep -Eq 'libamiga\.a\((v?s?printf)\.o\)' "$OUT/OpenSocketControl.map"; then
-        echo "OpenSocketControl: printf or sprintf came from amiga.lib, whose %u is 16 bits" >&2
+        -Wl,-Map="$OUT/GFOpenSocketControl.map" \
+        -o "$OUT/GFOpenSocketControl" "$HERE/control/acnetcontrol_gt.c" "$HERE/control/acnetcontrol_core.c"
+    if grep -Eq 'libamiga\.a\((v?s?printf)\.o\)' "$OUT/GFOpenSocketControl.map"; then
+        echo "GFOpenSocketControl: printf or sprintf came from amiga.lib, whose %u is 16 bits" >&2
         exit 1
     fi
-    echo "$OUT/OpenSocketControl ($(wc -c < "$OUT/OpenSocketControl") bytes)"
+    echo "$OUT/GFOpenSocketControl ($(wc -c < "$OUT/GFOpenSocketControl") bytes)"
 fi
 
 if [ -f "$GUEST/network/acwifi/build.sh" ]; then

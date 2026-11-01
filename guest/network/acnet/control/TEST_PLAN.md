@@ -1,6 +1,6 @@
 # ACNetControl Test Plan
 
-> **Renamed 4 October 2026.** ACNet is now OpenSocket: `acnet.device` is `DEVS:Networks/opensocket.device`, `acnetwork.library` is `opensocket.library`, `acwifi.device` is `opensocketwifi.device`, ACNetControlGT is OpenSocketControl (the ReAction version is retired), `acnetctl` is `C:OpenSocket`, the tools are in `SYS:Tools/OpenSocket/` and the interface is `opensocket0`. The current design is `docs/architecture/OPENSOCKET_DESIGN.md` in DalsinAI/amigachrome. The entries below keep the names of their time.
+> **Renamed 4 October 2026.** ACNet is now GFOpenSocket: `acnet.device` is `DEVS:Networks/gfopensocket.device`, `acnetwork.library` is `gfopensocket.library`, `acwifi.device` is `gfopensocketwifi.device`, ACNetControlGT is GFOpenSocketControl (the ReAction version is retired), `acnetctl` is `C:GFOpenSocket`, the tools are in `SYS:Tools/GFOpenSocket/` and the interface is `gfopensocket0`. The current design is `docs/architecture/OPENSOCKET_DESIGN.md` in DalsinAI/amigachrome. The entries below keep the names of their time.
 
 ACNetControl is the ReAction Commodity front end for ACNet on AmigaOS 3.2.3.
 ACNetControlGT is the same Commodity in GadTools for AmigaOS 2.04 to 3.2;

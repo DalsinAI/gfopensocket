@@ -1,5 +1,5 @@
-/* bsdsocket.library's Host backend: the calls go through opensocket.library
- * (acnetwork.library), opensocket.device and the OpenSocket card to the
+/* bsdsocket.library's Host backend: the calls go through gfopensocket.library
+ * (acnetwork.library), gfopensocket.device and the GFOpenSocket card to the
  * host's sockets. Each is the ROM's, or the disk's when that is newer: the
  * card layer chose and started them (card.c). Once
  * the card layer has chosen Host, an open never fails here: with either

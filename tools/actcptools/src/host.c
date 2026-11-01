@@ -1,7 +1,7 @@
 /* host: look a name up, or an address back up to its name.
  *   host aminet.net
  *   host 1.2.3.4
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <proto/exec.h>
 #include <sys/types.h>
@@ -14,7 +14,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: host 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: host 1.0 (4.10.2026) GFOpenSocket";
 
 static int host_main(int argc, char **argv)
 {

@@ -1,7 +1,7 @@
 #ifndef LIBRARIES_OPENTLS_H
 #define LIBRARIES_OPENTLS_H
 /*
- * opentls.library: a TLS client for AmigaOS 3.x.
+ * gfopentls.library: a TLS client for AmigaOS 3.x.
  * MIT licensed and free. Copyright (c) 2026 AmigaChrome Team.
  *
  * API version 1, frozen 9 October 2026. Later versions only add: new
@@ -9,7 +9,7 @@
  * end of struct OTContextConfig (its Size field says which fields a caller
  * filled in). Nothing here changes meaning.
  *
- * The functions are in <proto/opentls.h>; docs/AutoDocs-OpenTLS.md
+ * The functions are in <proto/gfopentls.h>; docs/AutoDocs-GFOpenTLS.md
  * describes each one. In short:
  *
  *   ctx  = OT_NewContext(&config, &err);          once per program
@@ -35,7 +35,7 @@
 #include <exec/types.h>
 #include <utility/hooks.h>
 
-#define OPENTLSLIB_NAME     "opentls.library"
+#define OPENTLSLIB_NAME     "gfopentls.library"
 #define OPENTLSLIB_VERSION  1
 
 /* Protocol versions, as on the wire. */

@@ -1,13 +1,13 @@
 #ifndef ACNET_PROVIDER_H
 #define ACNET_PROVIDER_H
 
-/* What OpenSocket's bsdsocket.library front end asks of a socket provider:
+/* What GFOpenSocket's bsdsocket.library front end asks of a socket provider:
  * the HostSocket command set (common/protocol/achostsocket.h) as calls, and
  * a wake-up when the provider has news. The card layer (card.c) chooses the
  * backend at init; provider.c passes each call to it:
- *   Host    provider_acnetwork.c: opensocket.library, opensocket.device and
- *           the OpenSocket card, to the host's sockets;
- *   Direct  provider_direct.c: OpenSocket's own stack over a SANA-II device,
+ *   Host    provider_acnetwork.c: gfopensocket.library, gfopensocket.device and
+ *           the GFOpenSocket card, to the host's sockets;
+ *   Direct  provider_direct.c: GFOpenSocket's own stack over a SANA-II device,
  *           answering the same commands in-process. */
 #include "acnet_lib.h"
 

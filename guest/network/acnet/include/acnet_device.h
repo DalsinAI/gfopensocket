@@ -2,25 +2,25 @@
 #define ACNET_DEVICE_H
 
 /*
- * opensocket.device's private calls: the one driver for the OpenSocket card
+ * gfopensocket.device's private calls: the one driver for the GFOpenSocket card
  * (formerly ACNet; Zorro II, AmigaChrome Team product 6; common/protocol/achostsocket.h).
- * opensocket.library opens the device and calls these vectors directly, with
+ * gfopensocket.library opens the device and calls these vectors directly, with
  * no I/O request per call. Design: OPENSOCKET_DESIGN.md in DalsinAI/amigachrome.
  *
  * The standard device vectors come first (Open -6, Close -12, Expunge -18,
  * reserved -24, BeginIO -30, AbortIO -36). BeginIO implements the SANA-II
- * packet facade; the private vectors below carry OpenSocket control/socket calls.
+ * packet facade; the private vectors below carry GFOpenSocket control/socket calls.
  */
 #include <exec/types.h>
 #include <exec/nodes.h>
 #include <exec/tasks.h>
 
-/* The device lives in DEVS:Networks/ (4 Oct 2026: ACNet became OpenSocket).
+/* The device lives in DEVS:Networks/ (4 Oct 2026: ACNet became GFOpenSocket).
  * Openers try that first, then the bare name (the open ROM's copy, which
  * ramlib starts from its RomTag), then the old name, so a new program still
  * works on an install that has only acnet.device. 0, or OpenDevice's error. */
-#define OPENSOCKET_DEVICE_NAME "opensocket.device"            /* its node name */
-#define OPENSOCKET_DEVICE_PATH "DEVS:Networks/opensocket.device"
+#define OPENSOCKET_DEVICE_NAME "gfopensocket.device"            /* its node name */
+#define OPENSOCKET_DEVICE_PATH "DEVS:Networks/gfopensocket.device"
 #define OPENSOCKET_DEVICE_OLD  "acnet.device"
 #define OPENSOCKET_OPEN_DEVICE(io) \
     (OpenDevice((STRPTR)OPENSOCKET_DEVICE_PATH, 0, (struct IORequest *)(io), 0) == 0 ? 0 : \

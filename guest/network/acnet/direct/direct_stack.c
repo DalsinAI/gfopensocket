@@ -1,4 +1,4 @@
-/* OpenSocketDirect: the stack's process, its SANA-II interface, and what
+/* GFOpenSocketDirect: the stack's process, its SANA-II interface, and what
  * lwIP asks of the platform (memory, time, random numbers).
  *
  * lwIP runs with NO_SYS: it is single-threaded, so every call into it holds
@@ -406,7 +406,7 @@ static APTR start(const struct CardConfig *cfg)
 
     DOSBase = (struct DosLibrary *)OpenLibrary((STRPTR)"dos.library", 37);
     if (!DOSBase) return NULL;
-    S.proc = CreateNewProcTags(NP_Entry, (ULONG)proc_main, NP_Name, (ULONG)"OpenSocket Direct",
+    S.proc = CreateNewProcTags(NP_Entry, (ULONG)proc_main, NP_Name, (ULONG)"GFOpenSocket Direct",
                                NP_Priority, 5, NP_StackSize, 16384,
                                NP_Input, 0, NP_Output, 0, NP_CloseInput, FALSE, NP_CloseOutput, FALSE,
                                NP_CurrentDir, 0, NP_HomeDir, 0, NP_Cli, FALSE, TAG_DONE);
@@ -428,8 +428,8 @@ static LONG call(APTR st, ULONG cmd, ULONG a0, ULONG a1, ULONG a2, ULONG a3,
 static void stop(APTR st) { (void)st; }
 
 static const struct DirectOps ops = { DIRECT_MAGIC, DIRECT_VERSION, start, call, arm, disarm, stop };
-static const char rt_name[] = "opensocketdirect";
-static const char rt_id[] = "opensocketdirect 1.0 (16.10.2026) OpenSocket's own stack (lwIP 2.2.1)\r\n";
+static const char rt_name[] = "gfopensocketdirect";
+static const char rt_id[] = "gfopensocketdirect 1.0 (16.10.2026) GFOpenSocket's own stack (lwIP 2.2.1)\r\n";
 const struct Resident direct_romtag __attribute__((used)) = {
     RTC_MATCHWORD, (struct Resident *)&direct_romtag, (APTR)(&direct_romtag + 1),
     0, 1, NT_UNKNOWN, 0, (char *)rt_name, (char *)rt_id, (APTR)&ops,

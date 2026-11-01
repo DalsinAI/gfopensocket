@@ -1,5 +1,5 @@
-#ifndef AMIGACHROME_ACHOSTSOCKET_H
-#define AMIGACHROME_ACHOSTSOCKET_H
+#ifndef AMICRADLE_ACHOSTSOCKET_H
+#define AMICRADLE_ACHOSTSOCKET_H
 
 /*
  * ACNet, the network card, and its HostSocket v1 block: the Amiga's sockets,
@@ -25,9 +25,9 @@
  * the Amiga's too: the host maps them.
  */
 
-#include "amigachrome_zorro.h"
-#define ACNET_MANUFACTURER        AMIGACHROME_MANUFACTURER
-#define ACNET_MANUFACTURER_OLD    AMIGACHROME_MANUFACTURER_OLD   /* looked for too */
+#include "amicradle_zorro.h"
+#define ACNET_MANUFACTURER        AMICRADLE_MANUFACTURER
+#define ACNET_MANUFACTURER_OLD    AMICRADLE_MANUFACTURER_OLD   /* looked for too */
 #define ACNET_PRODUCT             6
 #define ACNET_APERTURE_SIZE       0x10000UL
 

@@ -1,4 +1,4 @@
-/* The few C string functions AmigaChrome's OS 3.x guest code uses. Devices and
+/* The few C string functions AmiCradle's OS 3.x guest code uses. Devices and
  * handlers are built bare (no startup code, no C library), and gcc may also
  * call memcpy/memset itself for structure copies. */
 #include <stddef.h>

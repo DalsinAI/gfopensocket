@@ -4,11 +4,11 @@
  *   httpget -o file URL        saves it as file (-o - shows it)
  *   httpget -I URL             only the server's headers
  *   httpget -q ...             no progress
- * http:// always; https:// through OpenTLS (opentls.library, OpenUp's OpenTLS
+ * http:// always; https:// through GFOpenTLS (gfopentls.library, GFOpenUp's GFOpenTLS
  * part): TLS 1.2 or later, the server's certificate checked against
- * S:OpenTLS/ca-bundle.pem and ENVARC:OpenTLS/certs/, and its name. Follows
+ * S:GFOpenTLS/ca-bundle.pem and ENVARC:GFOpenTLS/certs/, and its name. Follows
  * up to 5 redirects. (Until 1.1 https:// needed a build with AmiSSL 5.)
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
 #include <proto/exec.h>
@@ -17,8 +17,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <proto/bsdsocket.h>
-#include <proto/opentls.h>
-#include <libraries/opentls.h>
+#include <proto/gfopentls.h>
+#include <libraries/gfopentls.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +26,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: httpget 1.1 (19.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: httpget 1.1 (19.10.2026) GFOpenSocket";
 
 struct Library *OpenTLSBase;
 static struct OTContext *ot_ctx;           /* made on the first https://, kept for redirects */
@@ -43,7 +43,7 @@ static int tls_start(const char *host)
 {
     LONG error = 0, r;
     if (!OpenTLSBase && !(OpenTLSBase = OpenLibrary((CONST_STRPTR)OPENTLSLIB_NAME, OPENTLSLIB_VERSION))) {
-        fprintf(stderr, "httpget: https:// needs OpenTLS (opentls.library, OpenUp's OpenTLS part)\n");
+        fprintf(stderr, "httpget: https:// needs GFOpenTLS (gfopentls.library, GFOpenUp's GFOpenTLS part)\n");
         return 0;
     }
     if (!ot_ctx) {
@@ -53,12 +53,12 @@ static int tls_start(const char *host)
         config.MinVersion = OT_TLS12;
         config.ALPN = (STRPTR)"http/1.1";
         if (!(ot_ctx = OT_NewContext(&config, &error))) {
-            fprintf(stderr, "httpget: OpenTLS could not be set up: %s\n", (const char *)OT_ErrorString(error));
+            fprintf(stderr, "httpget: GFOpenTLS could not be set up: %s\n", (const char *)OT_ErrorString(error));
             return 0;
         }
     }
     if (!(ot = OT_NewConnection(ot_ctx, (CONST_STRPTR)host, &error))) {
-        fprintf(stderr, "httpget: OpenTLS could not be set up: %s\n", (const char *)OT_ErrorString(error));
+        fprintf(stderr, "httpget: GFOpenTLS could not be set up: %s\n", (const char *)OT_ErrorString(error));
         return 0;
     }
     OT_SetSocket(ot, sock, SocketBase);
@@ -295,7 +295,7 @@ static int httpget_main(int argc, char **argv)
     for (hops = 0; hops <= 5; ++hops) {
         if (!conn_open(u.host, u.port, u.tls)) goto out;
         snprintf(request, sizeof(request),
-                 "%s %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: OpenSocket-httpget/1.0 (AmigaOS)\r\n"
+                 "%s %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: GFOpenSocket-httpget/1.0 (AmigaOS)\r\n"
                  "Accept: */*\r\nConnection: close\r\n\r\n", head_only ? "HEAD" : "GET", u.path, u.host);
         if (conn_write(request)) { fprintf(stderr, "httpget: could not send the request\n"); goto out; }
         if (conn_line(line, sizeof(line)) < 0 || strncmp(line, "HTTP/", 5) || !strchr(line, ' ')) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 DalsinAI. MIT licence (see LICENSE).
-"""Write sdk/SFD/bsdsocket_lib.sfd from OpenSocket's own ABI manifests:
+"""Write sdk/SFD/bsdsocket_lib.sfd from GFOpenSocket's own ABI manifests:
 the classic table (guest/network/acnet/abi/bsdsocket-v4.json), the
 extension table after it (guest/network/acnet/compat/roadshow/guard-v4.json),
 and the signatures of the extension calls the guard lists by slot only
@@ -104,8 +104,8 @@ def sfd():
     ext = json.load(open(EXT))["calls"]
     if core.get("bias") != 30:
         raise SystemExit("unexpected bias")
-    out = ["==id OpenSocket bsdsocket_lib.sfd",
-           "* bsdsocket.library's calls: OpenSocket's classic table and its extensions,",
+    out = ["==id GFOpenSocket bsdsocket_lib.sfd",
+           "* bsdsocket.library's calls: GFOpenSocket's classic table and its extensions,",
            "* written from its ABI manifests by sdk/tools/mksfd.py. Do not edit.",
            "* Copyright (c) 2026 DalsinAI. MIT licence (see LICENSE).",
            "==base _SocketBase", "==basetype struct Library *", "==libname bsdsocket.library",

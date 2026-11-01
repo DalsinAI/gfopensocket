@@ -1,19 +1,19 @@
-/* OpenSocket's card layer: the backend is chosen once, at the library's
+/* GFOpenSocket's card layer: the backend is chosen once, at the library's
  * init. That is its first OpenLibrary, which ramlib makes after DOS, in
  * ramlib's own process, so the configuration can be read from disk. The
  * disk comes first, then the default:
  *
  *  1. A network driver or configuration on the disk:
- *     a. ENV:OpenSocket/Interface (or ENVARC:OpenSocket/Interface) names a
+ *     a. ENV:GFOpenSocket/Interface (or ENVARC:GFOpenSocket/Interface) names a
  *        backend, or a device: that backend;
  *     b. a Roadshow interface file in DEVS:NetInterfaces/ names a SANA-II
- *        device: Direct, OpenSocket's own stack over that device;
- *     c. a SANA-II driver in DEVS:Networks/ other than OpenSocket's own
- *        (opensocket*.device, acnet.device): Direct over its unit 0.
- *  2. The default: the OpenSocket card is fitted (Zorro II, AmigaChrome Team,
- *     product 6): Host, through opensocket.library and opensocket.device.
- *     Each is the ROM's copy, unless the disk's (LIBS:opensocket.library,
- *     DEVS:Networks/opensocket.device) has a higher version.revision; on
+ *        device: Direct, GFOpenSocket's own stack over that device;
+ *     c. a SANA-II driver in DEVS:Networks/ other than GFOpenSocket's own
+ *        (gfopensocket*.device, acnet.device): Direct over its unit 0.
+ *  2. The default: the GFOpenSocket card is fitted (Zorro II, AmigaChrome Team,
+ *     product 6): Host, through gfopensocket.library and gfopensocket.device.
+ *     Each is the ROM's copy, unless the disk's (LIBS:gfopensocket.library,
+ *     DEVS:Networks/gfopensocket.device) has a higher version.revision; on
  *     equal versions the ROM's stays. The one chosen is started here, once,
  *     so every later open, by name or by path, finds it in memory.
  *  3. None of these: no backend. The init keeps nothing, so ramlib goes on
@@ -23,12 +23,12 @@
  * With no address configured, the interface is addressed by DHCP (cfg->dhcp).
  *
  * The files are keyword=value lines ("keyword value" is taken too), with
- * '#' or ';' starting a comment. OpenSocket's own keywords: backend
+ * '#' or ';' starting a comment. GFOpenSocket's own keywords: backend
  * (host, direct or none), device, unit, configure (dhcp), address, netmask,
  * gateway and nameserver (up to three). From a Roadshow interface file only
  * its documented keywords are read: device, unit, configure=dhcp, address
  * and netmask; the rest is skipped. Name servers for Direct come from
- * DEVS:Internet/name_resolution's "nameserver" lines when the OpenSocket
+ * DEVS:Internet/name_resolution's "nameserver" lines when the GFOpenSocket
  * file names none. No requester is shown for a missing ENV: or DEVS:.
  *
  * Nothing here is kept in a global: the choice goes into the master
@@ -143,21 +143,21 @@ static int one_interface(struct DosLibrary *DOSBase, struct Work *w, struct Card
     return 0;
 }
 
-/* A SANA-II driver that is not OpenSocket's own: 1, with cfg naming it. */
+/* A SANA-II driver that is not GFOpenSocket's own: 1, with cfg naming it. */
 static int one_driver(struct DosLibrary *DOSBase, struct Work *w, struct CardConfig *cfg,
                       const char *nm, LONG len)
 {
     LONG plen = 0;
     (void)DOSBase;
     if (len < 8 || !card_key_is(nm + len - 7, 7, ".device")) return 0;
-    if (starts_with(nm, len, "opensocket") || starts_with(nm, len, "acnet.")) return 0;
+    if (starts_with(nm, len, "gfopensocket") || starts_with(nm, len, "acnet.")) return 0;
     while (w->path[plen]) plen++;
     card_copy(cfg->device, sizeof(cfg->device), w->path, plen);
     cfg->unit = 0;
     return 1;
 }
 
-/* The OpenSocket card (Zorro II, AmigaChrome Team or the old 2011, product 6). */
+/* The GFOpenSocket card (Zorro II, AmigaChrome Team or the old 2011, product 6). */
 static int card_fitted(void)
 {
     struct Library *ExpansionBase = OpenLibrary((CONST_STRPTR)"expansion.library", 0);
@@ -242,7 +242,7 @@ static int host_module(struct DosLibrary *DOSBase, struct Work *w, UBYTE type,
 
 LONG card_choose(struct CardConfig *cfg)
 {
-    static const char ifname[] = "opensocket0";
+    static const char ifname[] = "gfopensocket0";
     struct DosLibrary *DOSBase = NULL;
     struct Process *me = (struct Process *)FindTask(NULL);
     struct Work *w = NULL;
@@ -267,8 +267,8 @@ LONG card_choose(struct CardConfig *cfg)
 
     /* 1. the disk */
     if (files) {
-        LONG got = parse_file(DOSBase, w, cfg, "ENV:OpenSocket/Interface", 1);
-        if (got < 0) got = parse_file(DOSBase, w, cfg, "ENVARC:OpenSocket/Interface", 1);
+        LONG got = parse_file(DOSBase, w, cfg, "ENV:GFOpenSocket/Interface", 1);
+        if (got < 0) got = parse_file(DOSBase, w, cfg, "ENVARC:GFOpenSocket/Interface", 1);
         if (got > 0) {
             if (!(got & GOT_BACKEND)) cfg->backend = BACKEND_DIRECT;   /* a device alone */
             cfg->chosen_by = CHOSEN_BY_CONFIG;

@@ -22,7 +22,7 @@ ACNet card / HostSocket
 Linux networking
 ```
 
-AmigaChrome-aware software may later open `acnetwork.library` directly without being constrained by the legacy bsdsocket ABI.
+AmiCradle-aware software may later open `acnetwork.library` directly without being constrained by the legacy bsdsocket ABI.
 
 ## v1 native vectors
 

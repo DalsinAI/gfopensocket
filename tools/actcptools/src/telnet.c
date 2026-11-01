@@ -3,7 +3,7 @@
  * Ctrl-] closes the connection; Ctrl-C goes to the other machine. The
  * terminal type is VT100 (the Amiga's console speaks most of it); the
  * cursor keys are sent as VT100 keys, Backspace as DEL.
- * OpenSocket ACTCPTools. MIT. */
+ * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
 #include <proto/exec.h>
@@ -17,7 +17,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: telnet 1.0 (4.10.2026) OpenSocket";
+static const char version[] __attribute__((used)) = "$VER: telnet 1.0 (4.10.2026) GFOpenSocket";
 
 enum { SE = 240, SB = 250, WILL = 251, WONT = 252, DO = 253, DONT = 254, IAC = 255 };
 enum { OPT_ECHO = 1, OPT_SGA = 3, OPT_TTYPE = 24, OPT_NAWS = 31 };
