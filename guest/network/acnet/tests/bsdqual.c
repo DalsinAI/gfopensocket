@@ -256,6 +256,19 @@ static void test_udp(void)
     memset(&from,0,sizeof(from)); flen=sizeof(from); memset(buf,0,sizeof(buf));
     result("UDP recvfrom", recvfrom(rs,buf,4,0,(struct sockaddr*)&from,&flen)==4 && memcmp(buf,"udp!",4)==0 && from.sin_family==AF_INET);
 
+    /* A datagram larger than the card's transmit buffer is refused with
+     * EMSGSIZE (1 Nov 2026: sendto copied it into the library's 16 KB
+     * scratch buffer unchecked, and ran over the memory after it). */
+    {
+        static char big[20000];
+        LONG r = sendto(ss,big,sizeof(big),0,(struct sockaddr*)&dst,sizeof(dst));
+        LONG e = Errno();
+        result("UDP sendto 20000 bytes EMSGSIZE", r<0 && e==EMSGSIZE);
+        result("UDP sendto after EMSGSIZE", sendto(ss,"udp!",4,0,(struct sockaddr*)&dst,sizeof(dst))==4);
+        memset(buf,0,sizeof(buf)); flen=sizeof(from);
+        result("UDP recvfrom after EMSGSIZE", recvfrom(rs,buf,4,0,(struct sockaddr*)&from,&flen)==4 && memcmp(buf,"udp!",4)==0);
+    }
+
     {
         struct iovec siov[2], riov[2];
         struct msghdr smsg, rmsg;
