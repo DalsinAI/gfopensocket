@@ -297,6 +297,23 @@ static void test_udp(void)
                from.sin_family==AF_INET && rmsg.msg_namelen==16);
     }
 
+    /* MSG_DONTWAIT on a blocking socket returns at once with EWOULDBLOCK
+     * (1 Nov 2026: recv and recvfrom waited, here for the receive timeout,
+     * as only sendmsg and recvmsg looked at the flag). */
+    {
+        struct timeval to;
+        LONG r, e;
+        to.tv_secs=0; to.tv_micro=500000;
+        setsockopt(rs, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to));
+        r = recv(rs, buf, 4, MSG_DONTWAIT);
+        e = Errno();
+        result("recv MSG_DONTWAIT EWOULDBLOCK", r<0 && e==EWOULDBLOCK);
+        flen=sizeof(from);
+        r = recvfrom(rs, buf, 4, MSG_DONTWAIT, (struct sockaddr*)&from, &flen);
+        e = Errno();
+        result("recvfrom MSG_DONTWAIT EWOULDBLOCK", r<0 && e==EWOULDBLOCK);
+    }
+
 out:
     closes(ss); closes(rs);
 }
