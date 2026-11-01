@@ -294,7 +294,7 @@ out:
  * (a poll that finds nothing), sends itself a datagram, and reads it. */
 static struct Task *traffic_parent;
 static ULONG traffic_done;
-static volatile LONG traffic_stop;
+static volatile LONG traffic_stop, traffic_sent;
 
 static void traffic_child(void)
 {
@@ -309,10 +309,11 @@ static void traffic_child(void)
         a.sin_len=sizeof(a); a.sin_family=AF_INET; a.sin_port=htons(23453);
         a.sin_addr.s_addr=inet_addr("127.0.0.1");
         if (b>=0 && c>=0 && bind(b,(struct sockaddr*)&a,sizeof(a))==0 && IoctlSocket(b,FIONBIO,&nb)==0) {
-            for (i=0; i<60 && !traffic_stop; i++) {
+            for (i=0; i<100 && !traffic_stop; i++) {
                 FD_ZERO(&rf); FD_SET(b,&rf); z.tv_secs=0; z.tv_micro=0;
                 WaitSelect(b+1,&rf,NULL,NULL,&z,NULL);
-                sendto(c,"tick",4,0,(struct sockaddr*)&a,sizeof(a));
+                if (sendto(c,"tick",4,0,(struct sockaddr*)&a,sizeof(a)) == 4)
+                    traffic_sent++;
                 Delay(5);
                 recv(b,buf,sizeof(buf),0);
             }
@@ -332,6 +333,14 @@ static LONG ticks_since(const struct DateStamp *t0)
     return ((t1.ds_Days-t0->ds_Days)*1440 + (t1.ds_Minute-t0->ds_Minute))*TICKS_PER_SECOND*60 + (t1.ds_Tick-t0->ds_Tick);
 }
 
+/* A timed wait under the traffic: 1 s (45 to 99 ticks), and the traffic
+ * really ran meanwhile (at least 5 sends). */
+static void timed(const char *name, int ok, LONG t, LONG sent)
+{
+    printf("  %ld ticks, %ld sends meanwhile\n", (long)t, (long)sent);
+    result(name, ok && t>=45 && t<100 && sent>=5);
+}
+
 /* A timeout is a deadline for the whole call, however many card events
  * wake the wait (1 Nov 2026: each event started the timeout again, so with
  * other traffic these waits never ended, and WaitSelect on no sockets ended
@@ -339,7 +348,7 @@ static LONG ticks_since(const struct DateStamp *t0)
 static void test_deadlines(void)
 {
     BYTE done = AllocSignal(-1);
-    LONG s = -1, r, t;
+    LONG s = -1, r, t, n;
     struct sockaddr_in a;
     struct DateStamp t0;
     struct timeval tv;
@@ -355,10 +364,10 @@ static void test_deadlines(void)
     Delay(10);
 
     tv.tv_secs=1; tv.tv_micro=0;
-    DateStamp(&t0);
+    n = traffic_sent; DateStamp(&t0);
     r = WaitSelect(0,NULL,NULL,NULL,&tv,NULL);
     t = ticks_since(&t0);
-    result("WaitSelect no sockets lasts 1 s", r==0 && t>=45 && t<100);
+    timed("WaitSelect no sockets lasts 1 s", r==0, t, traffic_sent-n);
 
     memset(&a,0,sizeof(a));
     a.sin_len=sizeof(a); a.sin_family=AF_INET; a.sin_port=htons(23454);
@@ -366,17 +375,17 @@ static void test_deadlines(void)
     s = socket(AF_INET,SOCK_DGRAM,0);
     if (s>=0 && bind(s,(struct sockaddr*)&a,sizeof(a))==0) {
         FD_ZERO(&rf); FD_SET(s,&rf); tv.tv_secs=1; tv.tv_micro=0;
-        DateStamp(&t0);
+        n = traffic_sent; DateStamp(&t0);
         r = WaitSelect(s+1,&rf,NULL,NULL,&tv,NULL);
         t = ticks_since(&t0);
-        result("WaitSelect timeout under traffic", r==0 && t>=45 && t<100);
+        timed("WaitSelect timeout under traffic", r==0, t, traffic_sent-n);
 
         tv.tv_secs=1; tv.tv_micro=0;
         setsockopt(s,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv));
-        DateStamp(&t0);
+        n = traffic_sent; DateStamp(&t0);
         r = recv(s,buf,sizeof(buf),0);
         t = ticks_since(&t0);
-        result("SO_RCVTIMEO under traffic", r<0 && t>=45 && t<100);
+        timed("SO_RCVTIMEO under traffic", r<0, t, traffic_sent-n);
     } else result("WaitSelect timeout under traffic", 0);
 
     traffic_stop = 1;
