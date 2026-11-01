@@ -146,8 +146,14 @@ static void disarm(APTR st, struct Task *task)
 
 /* ---- the SANA-II interface -------------------------------------------- */
 
+/* Both directions copy into or out of one of our FRAME-byte buffers (a
+ * CMD_READ's rdbuf, a CMD_WRITE's wrbuf). The driver chooses n: a frame
+ * longer than FRAME (jumbo, stacked VLAN tags) is refused here, before the
+ * copy, and the device answers that read with an error; frames_in posts
+ * the read again. */
 static BOOL copy_buf(REG(a0, APTR to), REG(a1, APTR from), REG(d0, ULONG n))
 {
+    if (n > FRAME) return FALSE;
     CopyMem(from, to, n);
     return TRUE;
 }
