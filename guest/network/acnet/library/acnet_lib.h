@@ -50,7 +50,7 @@ struct BPFLocal {
 /* What all openers share: the handle counts and the sockets waiting to be
  * obtained, changed under Forbid(), and the backend the card layer chose at
  * init (card.c). In memory the master allocates at init, not in globals, so
- * the library runs from a ROM (amigachrome-guest, libraries/opensocket). */
+ * the library runs from a ROM (amicradle-guest, libraries/opensocket). */
 struct SocketShared {
     struct { LONG handle, refs; } refs[DTABLE_MAX];
     struct { LONG id, handle; UBYTE type, used, pad[2]; } released[16];
@@ -105,7 +105,7 @@ struct SocketBase {
     char hostname[64];
 };
 
-/* amigachrome-guest, libraries/opensocket (the open ROM): no writable
+/* amicradle-guest, libraries/opensocket (the open ROM): no writable
  * globals, so the same code runs from the ROM. exec's base is read from
  * address 4 (AbsExecBase) each time, through a register, as gcc 16's
  * -Warray-bounds wants for a pointer made from a constant. */

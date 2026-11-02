@@ -46,7 +46,7 @@ Use the same placed OS 3.2.3 NDK and m68k-amigaos GCC stove as ACNet:
 STOVE=/path/to/os32-gcc16 ./tools/actcptools/build.sh
 ```
 
-The build does not fetch an NDK or a networking SDK. `httpget`'s https:// is GFOpenTLS: its API headers are in `third_party/opentls` (from DalsinAI/openamigatls main e7c0e2d, MIT), and `gfopentls.library` is opened at run time (GFOpenUp's GFOpenTLS part puts it in LIBS:). No AmiSSL SDK is needed or used.
+The build does not fetch an NDK or a networking SDK. `httpget`'s https:// is GFOpenTLS: its API headers are in `third_party/opentls` (from DalsinAI/gfopentls main e7c0e2d, MIT), and `gfopentls.library` is opened at run time (GFOpenUp's GFOpenTLS part puts it in LIBS:). No AmiSSL SDK is needed or used.
 
 ## Porting changes
 
