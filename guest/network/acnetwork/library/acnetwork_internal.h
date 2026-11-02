@@ -27,7 +27,7 @@ struct ACNetworkBase {
     ULONG last_error;
 };
 
-/* amigachrome-guest, libraries/opensocket (the open ROM): no writable
+/* amicradle-guest, libraries/opensocket (the open ROM): no writable
  * globals, so the same code runs from the ROM. exec's base is read from
  * address 4 (AbsExecBase) each time, through a register, as gcc 16's
  * -Warray-bounds wants for a pointer made from a constant. */

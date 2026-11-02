@@ -5,7 +5,7 @@
  * gfopensocket.device's private calls: the one driver for the GFOpenSocket card
  * (formerly ACNet; Zorro II, AmiCradle Team product 6; common/protocol/achostsocket.h).
  * gfopensocket.library opens the device and calls these vectors directly, with
- * no I/O request per call. Design: OPENSOCKET_DESIGN.md in DalsinAI/amigachrome.
+ * no I/O request per call. Design: OPENSOCKET_DESIGN.md in DalsinAI/amicradle.
  *
  * The standard device vectors come first (Open -6, Close -12, Expunge -18,
  * reserved -24, BeginIO -30, AbortIO -36). BeginIO implements the SANA-II

@@ -75,7 +75,7 @@ struct ACNetBase {
     ULONG reconfigurations;
 };
 
-/* amigachrome-guest, libraries/opensocket (the open ROM): no writable
+/* amicradle-guest, libraries/opensocket (the open ROM): no writable
  * globals, so the same code runs from the ROM. exec's base is read from
  * address 4 (AbsExecBase) each time, through a register, as gcc 16's
  * -Warray-bounds wants for a pointer made from a constant. */
@@ -150,7 +150,7 @@ static LONG call(struct ACNetBase *b, struct ACNCall *c)
 
 /* ---- SANA-II packet facade ---------------------------------------------------- */
 
-/* The packet task finds its device base in its tc_UserData (amigachrome-guest, the open ROM: no global). */
+/* The packet task finds its device base in its tc_UserData (amicradle-guest, the open ROM: no global). */
 
 static ULONG tag_data(APTR raw, ULONG wanted)
 {
@@ -969,7 +969,7 @@ static const struct { ULONG size; const APTR *vectors; APTR data; APTR init; } d
 };
 const struct Resident dev_romtag = {
     RTC_MATCHWORD, (struct Resident *)&dev_romtag, (APTR)(&dev_romtag + 1),
-    /* No start class: in the open ROM (amigachrome-guest) nothing starts it
+    /* No start class: in the open ROM (amicradle-guest) nothing starts it
      * at boot. bsdsocket.library's card layer starts it after DOS when the
      * card is fitted and no newer gfopensocket.device is on the disk (card.c);
      * then "DEVS:Networks/gfopensocket.device" opens it from memory. */

@@ -1,13 +1,13 @@
 # GFOpenSocket
 
-GFOpenSocket is a free (MIT) `bsdsocket.library` for AmigaOS 3.2.3: the classic Amiga socket interface, its core library, the card's driver, a Commodity and the standard network tools. It was called ACNet until 4 October 2026. The repository is `DalsinAI/openamigasocket` (it was `DalsinAI/Amigachrome-ACNet`; GitHub forwards the old address).
+GFOpenSocket is a free (MIT) `bsdsocket.library` for AmigaOS 3.2.3: the classic Amiga socket interface, its core library, the card's driver, a Commodity and the standard network tools. It was called ACNet until 4 October 2026. The repository is `DalsinAI/gfopensocket` (it was `DalsinAI/Amigachrome-ACNet`; GitHub forwards the old address).
 
 It has two backends under the one socket interface, and a card layer that chooses between them when the library starts:
 
 - **GFOpenSocket Host:** socket calls travel through the GFOpenSocket card (Zorro II, AmiCradle Team product 6) in an AmiCradle machine to real sockets on the x86 or ARM64 cores.
 - **GFOpenSocketDirect:** a TCP/IP stack of its own (lwIP) over the machine's own network card and its SANA-II driver, for real Amigas and PiStorm. Its place in the card layer is built; the stack itself is not yet, and until it is, socket calls on Direct answer `ENOSYS` at once.
 
-The design is `docs/architecture/OPENSOCKET_DESIGN.md` in DalsinAI/amigachrome.
+The design is `docs/architecture/OPENSOCKET_DESIGN.md` in DalsinAI/amicradle.
 
 ## Choosing the card
 
@@ -91,7 +91,7 @@ The status log from 1 to 3 October is in `docs/history/STATUS.md`. The complete 
 
 ## AmiCradle integration
 
-The AmiCradle runtime supplies the GFOpenSocket card, the HostSocket service on the x86 or ARM64 cores, the Network switch and the installer that puts this payload on an instance. Those live in DalsinAI/amigachrome with the machine they depend on.
+The AmiCradle runtime supplies the GFOpenSocket card, the HostSocket service on the x86 or ARM64 cores, the Network switch and the installer that puts this payload on an instance. Those live in DalsinAI/amicradle with the machine they depend on.
 
 ## Licence and credit
 

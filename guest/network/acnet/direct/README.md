@@ -11,7 +11,7 @@ disk has a network driver or configuration.
 | `direct_stack.c` | The stack's process, the SANA-II interface (raw frames, reads for IPv4 and ARP, writes from any task), and what lwIP asks of the platform. |
 | `direct_sock.c` | HostSocket's commands (`common/protocol/achostsocket.h`) over lwIP's raw API, so bsdsocket.library's front end works as it does over the bridge. |
 | `direct.h` | What bsdsocket.library calls (`struct DirectOps`). |
-| `romseg.c`, `romseg.h` | A hunk image loaded from memory into RAM: copied unchanged from amigachrome-guest `libraries/openrtg` (MIT, AmiCradle Team). |
+| `romseg.c`, `romseg.h` | A hunk image loaded from memory into RAM: copied unchanged from amicradle-guest `libraries/openrtg` (MIT, AmiCradle Team). |
 | `build.sh` | Builds the image and `direct_image.c`, the image as C data. |
 
 ## In the ROM
