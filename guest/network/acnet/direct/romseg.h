@@ -1,4 +1,4 @@
-/* Copyright (c) 2026 AmigaChrome Team. MIT licence (see LICENSE at the repository root).
+/* Copyright (c) 2026 AmiCradle Team. MIT licence (see LICENSE at the repository root).
  *
  * romseg: a hunk executable kept in the ROM as data, loaded into RAM the
  * way dos's LoadSeg loads one from a file: each hunk in memory of its own

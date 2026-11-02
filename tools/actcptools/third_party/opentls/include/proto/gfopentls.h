@@ -1,6 +1,6 @@
 #ifndef PROTO_OPENTLS_H
 #define PROTO_OPENTLS_H
-/* gfopentls.library. MIT licensed and free. Copyright (c) 2026 AmigaChrome Team. */
+/* gfopentls.library. MIT licensed and free. Copyright (c) 2026 AmiCradle Team. */
 
 #include <exec/types.h>
 #include <exec/libraries.h>

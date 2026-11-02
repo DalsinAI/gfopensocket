@@ -1,4 +1,4 @@
-/* Copyright (c) 2026 AmigaChrome Team. MIT licence (see LICENSE at the repository root).
+/* Copyright (c) 2026 AmiCradle Team. MIT licence (see LICENSE at the repository root).
  *
  * romseg: a hunk executable loaded from the ROM into RAM (romseg.h).
  * No writable globals: it runs from the ROM.

@@ -2,7 +2,7 @@
 #define LIBRARIES_OPENTLS_H
 /*
  * gfopentls.library: a TLS client for AmigaOS 3.x.
- * MIT licensed and free. Copyright (c) 2026 AmigaChrome Team.
+ * MIT licensed and free. Copyright (c) 2026 AmiCradle Team.
  *
  * API version 1, frozen 9 October 2026. Later versions only add: new
  * functions at the end of the table, new constants, and new fields at the
@@ -64,7 +64,7 @@
 #define OTERR_TRUSTSTORE    (-14)  /* no trust store could be read */
 #define OTERR_STATE         (-15)  /* the call is out of order (e.g. read before handshake) */
 #define OTERR_RANDOM        (-16)  /* no entropy */
-#define OTERR_UNSUPPORTED   (-17)  /* asked for something this version lacks (e.g. TLS 1.3) */
+#define OTERR_UNSUPPORTED   (-17)  /* asked for something this version lacks */
 #define OTERR_INTERNAL      (-18)
 #define OTERR_PINNED        (-19)  /* a pinned certificate did not match */
 
@@ -83,7 +83,7 @@ struct OTContextConfig {
     ULONG Size;          /* sizeof(struct OTContextConfig) */
     ULONG Flags;         /* OTCF_* */
     LONG  MinVersion;    /* OT_TLS* ; 0: OT_TLS12 */
-    LONG  MaxVersion;    /* OT_TLS* ; 0: the highest this library has */
+    LONG  MaxVersion;    /* OT_TLS* ; 0: the highest this library has (OT_TLS13 since 1.3) */
     STRPTR CAFile;       /* PEM bundle to trust as well; NULL: none */
     STRPTR ALPN;         /* default ALPN list, comma-separated; NULL: none */
 };
