@@ -5,11 +5,15 @@
  *
  *  1. A network driver or configuration on the disk:
  *     a. ENV:GFOpenSocket/Interface (or ENVARC:GFOpenSocket/Interface) names a
- *        backend, or a device: that backend;
+ *        backend, or a device: that backend. Where neither is there, the
+ *        names before the GF rename, ENV:OpenSocket/Interface and
+ *        ENVARC:OpenSocket/Interface, are read the same way, so an Amiga
+ *        upgraded from GFOpenUp 0.8.11 keeps its network;
  *     b. a Roadshow interface file in DEVS:NetInterfaces/ names a SANA-II
  *        device: Direct, GFOpenSocket's own stack over that device;
  *     c. a SANA-II driver in DEVS:Networks/ other than GFOpenSocket's own
- *        (gfopensocket*.device, acnet.device): Direct over its unit 0.
+ *        (gfopensocket*.device, opensocket*.device from before the rename,
+ *        acnet.device): Direct over its unit 0.
  *  2. The default: the GFOpenSocket card is fitted (Zorro II, AmiCradle Team,
  *     product 6): Host, through gfopensocket.library and gfopensocket.device.
  *     Each is the ROM's copy, unless the disk's (LIBS:gfopensocket.library,
@@ -150,7 +154,9 @@ static int one_driver(struct DosLibrary *DOSBase, struct Work *w, struct CardCon
     LONG plen = 0;
     (void)DOSBase;
     if (len < 8 || !card_key_is(nm + len - 7, 7, ".device")) return 0;
-    if (starts_with(nm, len, "gfopensocket") || starts_with(nm, len, "acnet.")) return 0;
+    /* ours, also by its name before the GF rename: an upgrade can leave opensocket.device there */
+    if (starts_with(nm, len, "gfopensocket") || starts_with(nm, len, "opensocket") || starts_with(nm, len, "acnet."))
+        return 0;
     while (w->path[plen]) plen++;
     card_copy(cfg->device, sizeof(cfg->device), w->path, plen);
     cfg->unit = 0;
@@ -269,6 +275,9 @@ LONG card_choose(struct CardConfig *cfg)
     if (files) {
         LONG got = parse_file(DOSBase, w, cfg, "ENV:GFOpenSocket/Interface", 1);
         if (got < 0) got = parse_file(DOSBase, w, cfg, "ENVARC:GFOpenSocket/Interface", 1);
+        /* the names before the GF rename (GFOpenUp 0.8.11 and earlier) */
+        if (got < 0) got = parse_file(DOSBase, w, cfg, "ENV:OpenSocket/Interface", 1);
+        if (got < 0) got = parse_file(DOSBase, w, cfg, "ENVARC:OpenSocket/Interface", 1);
         if (got > 0) {
             if (!(got & GOT_BACKEND)) cfg->backend = BACKEND_DIRECT;   /* a device alone */
             cfg->chosen_by = CHOSEN_BY_CONFIG;
