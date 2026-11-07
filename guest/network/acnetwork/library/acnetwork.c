@@ -18,13 +18,13 @@ static const char lib_name[] = ACNETWORK_LIBRARY_NAME;
 /* ACNETWORK_LIBRARY_REVISION may be raised at build time (-D), as the
  * device's may (acnet_device.c). */
 #ifndef ACNETWORK_LIBRARY_REVISION
-#define ACNETWORK_LIBRARY_REVISION 1
+#define ACNETWORK_LIBRARY_REVISION 2
 #endif
 #define LIB_STR2(x) #x
 #define LIB_STR(x) LIB_STR2(x)
 #define LIB_VR LIB_STR(ACNETWORK_LIBRARY_VERSION) "." LIB_STR(ACNETWORK_LIBRARY_REVISION)
-static const char lib_id[] = "gfopensocket.library " LIB_VR " (16.10.2026) GFOpenSocket (AmiCradle)\r\n";
-static const char lib_ver[] __attribute__((used)) = "$VER: gfopensocket.library " LIB_VR " (16.10.2026) GFOpenSocket (AmiCradle)";
+static const char lib_id[] = "gfopensocket.library " LIB_VR " (7.11.2026) GFOpenSocket (AmiCradle)\r\n";
+static const char lib_ver[] __attribute__((used)) = "$VER: gfopensocket.library " LIB_VR " (7.11.2026) GFOpenSocket (AmiCradle)";
 
 /* The RomTag near the start, its table defined at the end. A RomTag that
  * ends exactly where the hunk ends is not found when the library is
@@ -210,10 +210,23 @@ static ULONG acnetwork_state(REG(a6, struct ACNetworkBase *base))
     return base->dev ? dev_state(base->dev) : 0;
 }
 
+/* 1.2: a waiter of the caller's own, for a task that shares another task's
+ * base (bsdsocket.library 4.5 gives each such task its own signal). */
+static void acnetwork_addwaiter(REG(a0, struct ACNWaiter *w), REG(a6, struct ACNetworkBase *base))
+{
+    if (base->dev) dev_waiter(base->dev, w, 1);
+}
+
+static void acnetwork_remwaiter(REG(a0, struct ACNWaiter *w), REG(a6, struct ACNetworkBase *base))
+{
+    if (base->dev) dev_waiter(base->dev, w, 0);
+}
+
 static const APTR acnetwork_vectors[] = {
     (APTR)lib_open, (APTR)lib_close, (APTR)lib_expunge, (APTR)lib_reserved,
     (APTR)acnetwork_call, (APTR)acnetwork_arm, (APTR)acnetwork_disarm,
     (APTR)acnetwork_signalmask, (APTR)acnetwork_lasterror, (APTR)acnetwork_state,
+    (APTR)acnetwork_addwaiter, (APTR)acnetwork_remwaiter,
     (APTR)-1
 };
 

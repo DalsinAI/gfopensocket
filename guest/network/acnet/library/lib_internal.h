@@ -51,8 +51,12 @@ void set_herrno(struct SocketBase *sb, LONG e);
 LONG wait_items(struct SocketBase *sb, ULONG *items, ULONG *revents, LONG n,
                 const struct timeval *tv, ULONG extra, ULONG *got_extra);   /* >0 ready, 0 timeout or extra, -1 errno */
 LONG wait_ready(struct SocketBase *sb, LONG handle, ULONG events, const struct timeval *tv);
-LONG wait_event(struct SocketBase *sb);              /* the next provider event: 0, or -1 EINTR */
-LONG wait_armed_event(struct SocketBase *sb, const struct timeval *tv, ULONG extra, ULONG *got_extra);
+/* A wait's wake-up for the calling task (struct Wake): wake_begin before
+ * the first prov_arm, wake_end after the last prov_disarm. */
+LONG wake_begin(struct SocketBase *sb, struct Wake *wk);   /* 0, or -1 ENOMEM */
+void wake_end(struct SocketBase *sb, struct Wake *wk);
+LONG wait_event(struct SocketBase *sb, struct Wake *wk);   /* the next provider event: 0, or -1 EINTR */
+LONG wait_armed_event(struct SocketBase *sb, struct Wake *wk, const struct timeval *tv, ULONG extra, ULONG *got_extra);
 void timer_close(struct SocketBase *sb);
 
 /* optional Roadshow BPF compatibility */

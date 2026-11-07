@@ -103,6 +103,12 @@ if [ -f "$HERE/tests/bsdqual.c" ]; then
     echo "$OUT/bsdqual ($(wc -c < "$OUT/bsdqual") bytes)"
 fi
 
+if [ -f "$HERE/tests/taskwakeprobe.c" ]; then
+    "$CC" -m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -Wall -Wno-pointer-sign -noixemul \
+        -o "$OUT/taskwakeprobe" "$HERE/tests/taskwakeprobe.c"
+    echo "$OUT/taskwakeprobe ($(wc -c < "$OUT/taskwakeprobe") bytes)"
+fi
+
 if [ -f "$HERE/tests/roadshow_readonly_probe.c" ]; then
     "$CC" -m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -Wall -Wno-pointer-sign -noixemul $VENDOR_NDK \
         -o "$OUT/roadshow-readonly-probe" "$HERE/tests/roadshow_readonly_probe.c"

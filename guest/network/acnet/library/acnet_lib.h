@@ -21,7 +21,7 @@
 #define REG(r, decl) register decl __asm(#r)   /* bebbo gcc: an argument in a register */
 
 #define ACNET_LIB_VERSION   4
-#define ACNET_LIB_REVISION  4
+#define ACNET_LIB_REVISION  5
 #define DTABLE_DEFAULT      64
 #define DTABLE_MAX          256
 #define NAME_MAX_ADDRS      32
@@ -59,6 +59,28 @@ struct SocketShared {
     APTR direct;                   /* the Direct backend's stack, when it runs */
 };
 
+/* A timer.device request, for a wait's timeout (lib_select.c). */
+struct STimer {
+    struct MsgPort *port;
+    struct timerequest *req;
+    UBYTE open, pad[3];
+};
+
+/* One task's wait (lib_select.c). The opener's own task waits with the base's
+ * signal and timer, as before. Another task of the same program that calls
+ * with the opener's base (a second thread) waits with a signal and a timer
+ * of its own, made for that wait: before 4.5 every task armed the base's one
+ * waiter, so only the last to arm was woken and the others stayed asleep. */
+struct Wake {
+    struct ACNWaiter w;            /* Host: this task's waiter at the device */
+    struct Task *task;
+    ULONG mask;                    /* the signal the provider sends this task */
+    struct STimer *tm;             /* the base's, or own */
+    struct STimer own;
+    BYTE sig;                      /* allocated for this wait, or -1 */
+    UBYTE pad[3];
+};
+
 /* Every OpenLibrary gets a base of its own, as classic Amiga socket libraries give: the
  * master's jump table and Library header are copied in front of it. */
 struct SocketBase {
@@ -75,7 +97,8 @@ struct SocketBase {
     struct Library *dev;
     struct ACNWaiter waiter;
     BYTE sigbit;
-    UBYTE pad2[3];
+    UBYTE net_waiters;             /* gfopensocket.library takes a waiter per task (1.2) */
+    UBYTE pad2[2];
     LONG errno_val, herrno_val;
     ULONG last_err;                /* the provider's errno for the last call */
     UBYTE *scratch;                /* SCRATCH_SIZE bytes, allocated on first need */
@@ -85,10 +108,7 @@ struct SocketBase {
     LONG dtablesize;
     struct FD *fds;
     struct BPFLocal bpf[ACNET_BPF_CHANNELS];
-    struct MsgPort *tport;
-    struct timerequest *treq;      /* timer.device, opened for the first timeout */
-    UBYTE tdev_open;
-    UBYTE pad3[3];
+    struct STimer tm;              /* the opener's timer.device, opened for the first timeout */
     /* answers that stay valid until the next call of the same kind */
     struct hostent hent;
     char hname[256];

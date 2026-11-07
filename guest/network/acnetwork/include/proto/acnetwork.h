@@ -51,4 +51,19 @@ static inline ULONG ACNetwork_State(void)
     return d0;
 }
 
+/* 1.2 (ACNETWORK_WAITERS_REVISION): w is a struct ACNWaiter (acnet_device.h) */
+static inline void ACNetwork_AddWaiter(APTR w)
+{
+    register APTR a0 __asm("a0") = w;
+    register struct Library *a6 __asm("a6") = ACNetworkBase;
+    __asm volatile ("jsr -66(%%a6)" : "+r"(a0) : "r"(a6) : "d0", "d1", "a1", "cc", "memory");
+}
+
+static inline void ACNetwork_RemWaiter(APTR w)
+{
+    register APTR a0 __asm("a0") = w;
+    register struct Library *a6 __asm("a6") = ACNetworkBase;
+    __asm volatile ("jsr -72(%%a6)" : "+r"(a0) : "r"(a6) : "d0", "d1", "a1", "cc", "memory");
+}
+
 #endif

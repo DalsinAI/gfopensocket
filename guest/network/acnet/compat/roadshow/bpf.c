@@ -174,23 +174,27 @@ LONG bsd_bpf_read(struct SocketBase *sb, LONG channel, APTR buffer, LONG len)
 {
     struct BPFLocal *l = bpf_local(sb, channel);
     const struct timeval *tv;
+    struct Wake wk;
     ULONG got = 0, rxlen = 0;
     LONG r, w;
     if (!l) return fail(sb, AE_NXIO);
     if (!buffer) return fail(sb, AE_FAULT);
     if ((ULONG)len != l->buffer_size) return fail(sb, AE_INVAL);
     tv = (l->timeout.tv_secs || l->timeout.tv_micro) ? &l->timeout : NULL;
+    if (wake_begin(sb, &wk) < 0) return -1;
     for (;;) {
-        prov_arm(sb);
+        prov_arm(sb, &wk);
         r = prov_call(sb, ACHS_CMD_BPF_READ, l->handle, l->buffer_size,0,0,
                       NULL,0,buffer,l->buffer_size,&rxlen);
-        if (r >= 0) { prov_disarm(sb); set_errno(sb,0); return r; }
-        if (sb->last_err != AE_AGAIN) { prov_disarm(sb); return fail_provider(sb); }
-        w = wait_armed_event(sb, tv, l->interrupt_mask, &got);
-        if (w < 0) return -1;
-        if (w == 0 && tv) { set_errno(sb,0); return 0; }
-        if (w == 2) return fail(sb, AE_INTR);
+        if (r >= 0) { prov_disarm(sb, &wk); set_errno(sb,0); break; }
+        if (sb->last_err != AE_AGAIN) { prov_disarm(sb, &wk); r = fail_provider(sb); break; }
+        w = wait_armed_event(sb, &wk, tv, l->interrupt_mask, &got);
+        if (w < 0) { r = -1; break; }
+        if (w == 0 && tv) { set_errno(sb,0); r = 0; break; }
+        if (w == 2) { r = fail(sb, AE_INTR); break; }
     }
+    wake_end(sb, &wk);
+    return r;
 }
 static int name_is_acnet0(const char *s)
 {

@@ -181,5 +181,11 @@ struct ACNetworkRequest {
 #define ACNETWORK_LVO_SIGNALMASK (-48)
 #define ACNETWORK_LVO_LASTERROR  (-54)
 #define ACNETWORK_LVO_STATE      (-60)
+/* 1.2: AddWaiter(waiter)(a0) and RemWaiter(waiter)(a0) hand a struct
+ * ACNWaiter (acnet_device.h) of the caller's own to the device, so that
+ * each task of a program sharing one base is woken with its own signal. */
+#define ACNETWORK_LVO_ADDWAITER  (-66)
+#define ACNETWORK_LVO_REMWAITER  (-72)
+#define ACNETWORK_WAITERS_REVISION 2
 
 #endif
