@@ -8,6 +8,9 @@
  * round trips from the opener and from a child, for before/after numbers.
  *   taskwakeprobe [ROUNDS] [owner]   (default 500; owner: only the opener's
  *                                     timings, which an older library can run)
+ *   taskwakeprobe [ROUNDS] bench     the wait path alone, no network time:
+ *                                     WaitSelect on a socket already readable,
+ *                                     and on an empty one with a zero timeout
  * A task found still asleep is a FAIL; the probe then waits for Ctrl-C
  * rather than end under it, so run it with Run and its output in a file.
  * MIT.
@@ -173,6 +176,7 @@ int main(int argc, char **argv)
 {
     LONG rounds = argc > 1 ? atol(argv[1]) : 500, lsock, i;
     int owner_only = argc > 2 && !strcmp(argv[2], "owner");
+    int bench = argc > 2 && !strcmp(argv[2], "bench");
     char t1[16];
     LONG c[CHILDREN + 1], a[CHILDREN + 1];
     struct sockaddr_in at;
@@ -195,6 +199,36 @@ int main(int argc, char **argv)
     for (i = 0; i <= CHILDREN; i++)
         if (!pair(lsock, &at, &c[i], &a[i])) { printf("pair %ld failed, errno %ld\n", (long)i, (long)Errno()); return 20; }
 
+    if (bench) {
+        /* c[CHILDREN] holds one byte it never reads; c[0] stays empty */
+        fd_set r;
+        struct timeval tv;
+        double t0, us;
+        LONG k, bad = 0;
+        send(a[CHILDREN], (APTR)"z", 1, 0);
+        Delay(5);
+        t0 = now_us();
+        for (k = 0; k < rounds; k++) {
+            FD_ZERO(&r); FD_SET(c[CHILDREN], &r);
+            tv.tv_sec = 2; tv.tv_usec = 0;
+            if (WaitSelect(c[CHILDREN] + 1, &r, NULL, NULL, &tv, NULL) != 1) bad++;
+        }
+        us = (now_us() - t0) / (double)rounds;
+        tenths(t1, us);
+        sprintf(line, "%ld calls, %s us per call", (long)rounds, t1);
+        result("WaitSelect, readable at once", !bad, line);
+        t0 = now_us();
+        for (k = 0; k < rounds; k++) {
+            FD_ZERO(&r); FD_SET(c[0], &r);
+            tv.tv_sec = 0; tv.tv_usec = 0;
+            if (WaitSelect(c[0] + 1, &r, NULL, NULL, &tv, NULL) != 0) bad++;
+        }
+        us = (now_us() - t0) / (double)rounds;
+        tenths(t1, us);
+        sprintf(line, "%ld calls, %s us per call", (long)rounds, t1);
+        result("WaitSelect, empty, zero timeout", !bad, line);
+        goto done;
+    }
     if (owner_only) goto timings;
 
     /* 1: three children each blocked in recv; data for each, in turn */
@@ -278,6 +312,7 @@ timings:
         result("child recv round trips (opener echoes)", ok && jobs[2].done && jobs[2].got == 1, line);
     }
 
+done:
     for (i = 0; i <= CHILDREN; i++) { CloseSocket(c[i]); CloseSocket(a[i]); }
     CloseSocket(lsock);
     printf("taskwakeprobe: %d passed, %d failed\n", passes, failures);
