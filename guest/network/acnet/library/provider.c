@@ -26,12 +26,30 @@ LONG prov_call(struct SocketBase *sb, ULONG cmd, ULONG a0, ULONG a1, ULONG a2, U
     return host_call(sb, cmd, a0, a1, a2, a3, tx, txlen, rx, rxmax, rxlen);
 }
 
-void prov_arm(struct SocketBase *sb)
+void prov_arm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (BACKEND(sb) == BACKEND_DIRECT) direct_arm(sb); else host_arm(sb);
+    if (BACKEND(sb) == BACKEND_DIRECT) direct_arm(sb, wk); else host_arm(sb, wk);
 }
 
-void prov_disarm(struct SocketBase *sb)
+void prov_disarm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (BACKEND(sb) == BACKEND_DIRECT) direct_disarm(sb); else host_disarm(sb);
+    if (BACKEND(sb) == BACKEND_DIRECT) direct_disarm(sb, wk); else host_disarm(sb, wk);
+}
+
+/* Direct's stack keeps a waiter per task already; Host needs
+ * gfopensocket.library 1.2's AddWaiter and RemWaiter. */
+int prov_own_waiter(struct SocketBase *sb)
+{
+    if (BACKEND(sb) == BACKEND_DIRECT) return sb->provider_sigmask != 0;
+    return sb->net_waiters;
+}
+
+void prov_add(struct SocketBase *sb, struct Wake *wk)
+{
+    if (BACKEND(sb) != BACKEND_DIRECT) host_add(sb, wk);
+}
+
+void prov_rem(struct SocketBase *sb, struct Wake *wk)
+{
+    if (BACKEND(sb) != BACKEND_DIRECT) host_rem(sb, wk);
 }

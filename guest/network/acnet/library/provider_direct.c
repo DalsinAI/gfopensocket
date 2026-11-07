@@ -9,6 +9,9 @@
  *
  * Each opener gets a signal of its own; the stack signals it, while armed,
  * whenever anything happens on any socket, and the front end polls again.
+ * The stack keeps a waiter per task, so another task of the opener's program
+ * arms with its own task and signal (struct Wake): before 4.5 every task armed
+ * as the opener, so the opener was woken in their place.
  * With no stack (memory ran out), every call answers ENETDOWN. MIT. */
 #include <exec/types.h>
 #include <exec/memory.h>
@@ -86,13 +89,13 @@ LONG direct_call(struct SocketBase *sb, ULONG cmd, ULONG a0, ULONG a1, ULONG a2,
     return r;
 }
 
-void direct_arm(struct SocketBase *sb)
+void direct_arm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (LOADED(sb) && sb->provider_sigmask)
-        LOADED(sb)->ops->arm(LOADED(sb)->stack, sb->owner, sb->provider_sigmask);
+    if (LOADED(sb) && wk->mask)
+        LOADED(sb)->ops->arm(LOADED(sb)->stack, wk->task, wk->mask);
 }
 
-void direct_disarm(struct SocketBase *sb)
+void direct_disarm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (LOADED(sb)) LOADED(sb)->ops->disarm(LOADED(sb)->stack, sb->owner);
+    if (LOADED(sb)) LOADED(sb)->ops->disarm(LOADED(sb)->stack, wk->task);
 }

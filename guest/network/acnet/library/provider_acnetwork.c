@@ -34,6 +34,15 @@ static inline void net_disarm(struct Library *lib)
     __asm volatile ("jsr -42(%%a6)" : : "r"(a6) : "d0", "d1", "a0", "a1", "cc", "memory");
 }
 
+/* gfopensocket.library 1.2: a waiter of the caller's own */
+static inline void net_waiter(struct Library *lib, struct ACNWaiter *w, int add)
+{
+    register struct ACNWaiter *a0 __asm("a0") = w;
+    register struct Library *a6 __asm("a6") = lib;
+    if (add) __asm volatile ("jsr -66(%%a6)" : "+r"(a0) : "r"(a6) : "d0", "d1", "a1", "cc", "memory");
+    else     __asm volatile ("jsr -72(%%a6)" : "+r"(a0) : "r"(a6) : "d0", "d1", "a1", "cc", "memory");
+}
+
 static inline ULONG net_signalmask(struct Library *lib)
 {
     register ULONG d0 __asm("d0");
@@ -52,7 +61,10 @@ LONG host_open(struct SocketBase *sb)
     if (!sb->provider_sigmask) {
         CloseLibrary(sb->network);
         sb->network = NULL;
+        return 0;
     }
+    sb->net_waiters = sb->network->lib_Version > ACNETWORK_LIBRARY_VERSION ||
+                      sb->network->lib_Revision >= ACNETWORK_WAITERS_REVISION;
     return 0;
 }
 
@@ -85,12 +97,31 @@ LONG host_call(struct SocketBase *sb, ULONG cmd, ULONG a0, ULONG a1, ULONG a2, U
     return request.result;
 }
 
-void host_arm(struct SocketBase *sb)
+/* The opener arms its gfopensocket.library base's waiter; another task of its
+ * program arms its own (wk->sig, from wake_begin), so each waiting task is
+ * signalled. With an older gfopensocket.library every task arms the base's
+ * one waiter, as before 4.5. */
+void host_arm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (sb->network) net_arm(sb->network);
+    if (wk->sig >= 0) wk->w.waiting = 1;
+    else if (sb->network) net_arm(sb->network);
 }
 
-void host_disarm(struct SocketBase *sb)
+void host_disarm(struct SocketBase *sb, struct Wake *wk)
 {
-    if (sb->network) net_disarm(sb->network);
+    if (wk->sig >= 0) wk->w.waiting = 0;
+    else if (sb->network) net_disarm(sb->network);
+}
+
+void host_add(struct SocketBase *sb, struct Wake *wk)
+{
+    wk->w.task = wk->task;
+    wk->w.sigmask = wk->mask;
+    wk->w.waiting = 0;
+    net_waiter(sb->network, &wk->w, 1);
+}
+
+void host_rem(struct SocketBase *sb, struct Wake *wk)
+{
+    net_waiter(sb->network, &wk->w, 0);
 }

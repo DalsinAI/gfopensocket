@@ -10,13 +10,19 @@ static ULONG slen(const char*s,ULONG max){ULONG n=0;if(!s)return 0;while(n<max&&
 static void scopy(char*d,const char*s,ULONG max){ULONG n=slen(s,max?max-1:0);if(max){if(n)CopyMem((APTR)s,d,n);d[n]=0;}}
 void names_close(struct SocketBase *sb){(void)sb;}
 
+static struct hostent *answer(struct SocketBase *sb,struct Wake *wk,LONG ticket,UBYTE *x);
 static struct hostent *resolve(struct SocketBase *sb,ULONG cmd,const void*tx,ULONG txlen)
 {
- UBYTE *x=scratch(sb);ULONG n=0;LONG ticket=prov_call(sb,cmd,0,0,0,0,tx,txlen,NULL,0,NULL);if(ticket<0){set_herrno(sb,(LONG)sb->last_err);return NULL;}
+ UBYTE *x=scratch(sb);struct Wake wk;struct hostent *h;LONG ticket=prov_call(sb,cmd,0,0,0,0,tx,txlen,NULL,0,NULL);if(ticket<0){set_herrno(sb,(LONG)sb->last_err);return NULL;}
+ if(wake_begin(sb,&wk)<0){set_herrno(sb,AH_TRY_AGAIN);return NULL;}h=answer(sb,&wk,ticket,x);wake_end(sb,&wk);return h;
+}
+static struct hostent *answer(struct SocketBase *sb,struct Wake *wk,LONG ticket,UBYTE *x)
+{
+ ULONG n=0;
  /* armed before each ANSWER: the lookup can finish (and its event come) between an
     "in progress" answer and the wait; an armed waiter gets the signal then */
- for(;;){prov_arm(sb);LONG r=prov_call(sb,ACHS_CMD_ANSWER,ticket,0,0,0,NULL,0,x,SCRATCH_SIZE,&n);if(r>=0||sb->last_err!=AE_INPROGRESS)prov_disarm(sb);if(r>=0){ULONG i=0,j=0;while(i<n&&x[i])i++;if(i>=n){set_herrno(sb,AH_NO_RECOVERY);return NULL;}scopy(sb->hname,(char*)x,sizeof(sb->hname));i++;while(i+4<=n&&j<NAME_MAX_ADDRS){CopyMem(x+i,&sb->haddr[j],4);sb->haddrs[j]=(char*)&sb->haddr[j];j++;i+=4;}sb->haddrs[j]=NULL;sb->hnull[0]=NULL;sb->hent.h_name=sb->hname;sb->hent.h_aliases=(STRPTR*)sb->hnull;sb->hent.h_addrtype=AF_INET;sb->hent.h_length=4;sb->hent.h_addr_list=sb->haddrs;set_herrno(sb,0);return &sb->hent;}
-   if(sb->last_err!=AE_INPROGRESS){set_herrno(sb,(LONG)sb->last_err);return NULL;}if(wait_event(sb)<0){set_herrno(sb,AH_TRY_AGAIN);return NULL;}}
+ for(;;){prov_arm(sb,wk);LONG r=prov_call(sb,ACHS_CMD_ANSWER,ticket,0,0,0,NULL,0,x,SCRATCH_SIZE,&n);if(r>=0||sb->last_err!=AE_INPROGRESS)prov_disarm(sb,wk);if(r>=0){ULONG i=0,j=0;while(i<n&&x[i])i++;if(i>=n){set_herrno(sb,AH_NO_RECOVERY);return NULL;}scopy(sb->hname,(char*)x,sizeof(sb->hname));i++;while(i+4<=n&&j<NAME_MAX_ADDRS){CopyMem(x+i,&sb->haddr[j],4);sb->haddrs[j]=(char*)&sb->haddr[j];j++;i+=4;}sb->haddrs[j]=NULL;sb->hnull[0]=NULL;sb->hent.h_name=sb->hname;sb->hent.h_aliases=(STRPTR*)sb->hnull;sb->hent.h_addrtype=AF_INET;sb->hent.h_length=4;sb->hent.h_addr_list=sb->haddrs;set_herrno(sb,0);return &sb->hent;}
+   if(sb->last_err!=AE_INPROGRESS){set_herrno(sb,(LONG)sb->last_err);return NULL;}if(wait_event(sb,wk)<0){set_herrno(sb,AH_TRY_AGAIN);return NULL;}}
 }
 struct hostent *bsd_gethostbyname(struct SocketBase *sb,STRPTR name){if(!name){set_herrno(sb,AH_HOST_NOT_FOUND);return NULL;}return resolve(sb,ACHS_CMD_RESOLVE,name,slen(name,255)+1);}
 struct hostent *bsd_gethostbyaddr(struct SocketBase *sb,STRPTR addr,LONG len,LONG type){if(!addr||len!=4||type!=AF_INET){set_herrno(sb,AH_NO_RECOVERY);return NULL;}return resolve(sb,ACHS_CMD_RESOLVE_ADDR,addr,4);}
