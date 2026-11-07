@@ -572,8 +572,14 @@ file (char *name)
 
 	while (fgets (line, 100, fp) != NULL)
 	{
-		i = sscanf (line, "%s %s %s %s %s", arg[0], arg[1], arg[2], arg[3], arg[4]);
-		if (i < 2)
+		i = sscanf (line, "%49s %49s %49s %49s %49s", arg[0], arg[1], arg[2], arg[3], arg[4]);
+
+		/* a field that filled its buffer may have been cut short */
+		for (j = 0; j < i; j++)
+			if (strlen (arg[j]) >= sizeof (arg[j]) - 1)
+				break;
+
+		if (i < 2 || j < i)
 		{
 			fprintf (stderr, "arp: bad line: %s\n", line);
 			retval = 1;
