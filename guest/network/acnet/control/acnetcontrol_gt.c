@@ -11,7 +11,7 @@
  * screen) and can be resized. Closing it hides the Commodity; networking
  * never depends on it.
  *
- * Keys: Tab and Shift-Tab change page, 1 to 5 pick one, Esc hides, and the
+ * Keys: Tab and Shift-Tab change page, 1 to 6 pick one, Esc hides, and the
  * underlined letters press buttons.
  *
  * MIT.
@@ -37,7 +37,7 @@
 
 struct Library *GadToolsBase;
 
-#define VERSION_TEXT "GFOpenSocketControl 1.0.2 (12.10.2026)"   /* 1.0.2: addresses in the right order */
+#define VERSION_TEXT "GFOpenSocketControl 1.1 (9.11.2026)"   /* 1.1: the Settings page, a Wi-Fi password for a new network */
 static const char version[] __attribute__((used)) = "$VER: " VERSION_TEXT;
 
 enum { GID_PAGES = GID_FIRST_FREE, GID_STATUS, GID_COUNT };
@@ -622,6 +622,19 @@ static void busy(BOOL on)
 }
 
 /* A button, by id: the fields first, then the core runs it. */
+/* The core's field buffers back into the gadgets: acnc_press may change one (it clears the Wi-Fi
+ * password once used, and Read fills the Settings page), and redo() copies the gadgets first. */
+static void push_fields(void)
+{
+    int k, i;
+    for (k = 0; k < acnc_page[page].groups; ++k)
+        for (i = 0; i < ACNC_MAX_FIELDS && acnc_page[page].group[k].field[i].id; ++i) {
+            const ACNCField *f = &acnc_page[page].group[k].field[i];
+            struct Gadget *g = f->id < GID_COUNT ? gad[f->id] : NULL;
+            if (g && win) GT_SetGadgetAttrs(g, win, NULL, GTST_String, (ULONG)f->buf, TAG_DONE);
+        }
+}
+
 static void press(ULONG id)
 {
     BOOL changed;
@@ -629,6 +642,7 @@ static void press(ULONG id)
     busy(TRUE);
     changed = acnc_press(id, confirm);
     busy(FALSE);
+    if (win) push_fields();
     if (changed && win) redo();
 }
 
@@ -701,7 +715,7 @@ static void window_events(void)
                     const ACNCField *f = find_field(GID_F_WIFI_SSID);
                     if (acnc_pick(GID_L_WIFI, code) && f && gad[GID_F_WIFI_SSID])
                         GT_SetGadgetAttrs(gad[GID_F_WIFI_SSID], win, NULL, GTST_String, (ULONG)f->buf, TAG_DONE);
-                } else if (g->GadgetID >= GID_F_WIFI_SSID && g->GadgetID <= GID_F_DIAG_PORT) {
+                } else if (g->GadgetID >= GID_F_WIFI_SSID && g->GadgetID < GID_L_WIFI) {
                     copy_fields();                          /* typed; a button runs it */
                 } else if (g->GadgetID > GID_TABS && g->GadgetID < GID_F_WIFI_SSID) {
                     press(g->GadgetID);

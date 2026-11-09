@@ -30,9 +30,9 @@ struct ExecBase *SysBase;
 int start(void) { return -1; }
 
 static const char dev_name[] = ACWIFI_DEVICE_NAME;
-static const char dev_id[] = "gfopensocketwifi.device 1.0 (4.10.2026) GFOpenSocket (AmiCradle)\r\n";
+static const char dev_id[] = "gfopensocketwifi.device 1.1 (9.11.2026) GFOpenSocket (AmiCradle)\r\n";
 static const char ver[] __attribute__((used)) =
-    "$VER: gfopensocketwifi.device 1.0 (4.10.2026) GFOpenSocket (AmiCradle)";
+    "$VER: gfopensocketwifi.device 1.1 (9.11.2026) GFOpenSocket (AmiCradle)";
 static LONG net_call(struct Library *lib, struct ACNetworkRequest *request)
 {
     register struct ACNetworkRequest *a0 __asm("a0") = request;
@@ -83,6 +83,114 @@ static ULONG native_command(ULONG command)
         case ACWIFI_FORGET: return ACNETWORK_CMD_WIFI_FORGET;
         default: return 0;
     }
+}
+
+/* One host command run as the Wi-Fi ones are: sent, which gives a ticket, then WIFI_ANSWER until it is
+ * done, waiting on the library's signal; Ctrl-C cancels. Returns the answer's result (rx gets its data,
+ * *rxlen its length), or -1 with *error. */
+static LONG run_ticket(ULONG command, const UBYTE *tx, ULONG txlen, UBYTE *rx, ULONG rxmax,
+                       ULONG *error, ULONG *rxlen)
+{
+    struct Library *net;
+    struct ACNetworkRequest req;
+    ULONG ticket, mask, sigs;
+    LONG rc;
+
+    *error = AE_INVAL;
+    if (rxlen) *rxlen = 0;
+    net = OpenLibrary(ACNETWORK_LIBRARY_NAME, ACNETWORK_LIBRARY_VERSION);
+    if (!net) { *error = AE_NETDOWN; return -1; }
+    mask = net_signalmask(net);
+    if (!mask) { CloseLibrary(net); *error = AE_NETDOWN; return -1; }
+    req.command = command;
+    req.arg[0] = req.arg[1] = req.arg[2] = req.arg[3] = 0;
+    req.tx = tx;
+    req.txlen = txlen;
+    req.rx = NULL;
+    req.rxmax = 0;
+    req.result = -1;
+    req.error = 0;
+    req.rxlen = 0;
+    rc = net_call(net, &req);
+    if (rc < 0) { *error = req.error; CloseLibrary(net); return -1; }
+    ticket = (ULONG)rc;
+    for (;;) {
+        net_arm(net);
+        req.command = ACNETWORK_CMD_WIFI_ANSWER;
+        req.arg[0] = ticket;
+        req.arg[1] = req.arg[2] = req.arg[3] = 0;
+        req.tx = NULL;
+        req.txlen = 0;
+        req.rx = rx;
+        req.rxmax = rx ? rxmax : 0;
+        req.result = -1;
+        req.error = 0;
+        req.rxlen = 0;
+        rc = net_call(net, &req);
+        if (rc >= 0) {
+            net_disarm(net);
+            SetSignal(0, mask);
+            *error = 0;
+            if (rxlen) *rxlen = req.rxlen;
+            CloseLibrary(net);
+            return rc;
+        }
+        if (req.error != AE_INPROGRESS) {
+            net_disarm(net);
+            *error = req.error;
+            CloseLibrary(net);
+            return -1;
+        }
+        sigs = Wait(mask | SIGBREAKF_CTRL_C);
+        net_disarm(net);
+        if (sigs & SIGBREAKF_CTRL_C) {
+            req.command = ACNETWORK_CMD_WIFI_CANCEL;
+            req.arg[0] = ticket;
+            req.rx = NULL;
+            req.rxmax = 0;
+            req.tx = NULL;
+            req.txlen = 0;
+            net_call(net, &req);
+            *error = AE_INTR;
+            CloseLibrary(net);
+            return -1;
+        }
+    }
+}
+
+/* 1.1: join with a key, and the network settings (ACWiFiCall2). */
+static LONG run_call2(struct ACWiFiCall2 *call)
+{
+    ULONG command, txlen = 0, i;
+    LONG rc;
+
+    if (!call || call->size < sizeof(struct ACWiFiCall2)) return -1;
+    call->result = -1;
+    call->error = AE_INVAL;
+    call->rxlen = 0;
+    switch (call->command) {
+        case ACWIFI_JOINKEY: command = ACNETWORK_CMD_WIFI_JOINKEY; break;
+        case ACWIFI_NET_GET: command = ACNETWORK_CMD_NET_GET; break;
+        case ACWIFI_NET_SET: command = ACNETWORK_CMD_NET_SET; break;
+        default: return -1;
+    }
+    if (call->command == ACWIFI_JOINKEY || call->command == ACWIFI_NET_SET) {
+        /* SSID\0KEY\0 (two NULs, at most 33 + 65 bytes), or text\0 (at most 8 KB) */
+        ULONG need = call->command == ACWIFI_JOINKEY ? 2 : 1, seen = 0, limit = call->command == ACWIFI_JOINKEY ? 98 : 8192;
+        if (!call->tx || !call->txlen || call->txlen > limit) return -1;
+        for (i = 0; i < call->txlen && seen < need; ++i) if (!call->tx[i]) seen++;
+        if (seen < need) return -1;
+        txlen = i;
+    }
+    if (call->command == ACWIFI_NET_GET && (!call->rx || call->rxmax < 2)) return -1;
+    rc = run_ticket(command, call->tx, txlen, call->command == ACWIFI_NET_GET ? call->rx : NULL,
+                    call->command == ACWIFI_NET_GET ? call->rxmax - 1 : 0, &call->error, &call->rxlen);
+    if (call->command == ACWIFI_NET_GET && rc >= 0) {
+        if (call->rxlen >= call->rxmax) call->rxlen = call->rxmax - 1;
+        call->rx[call->rxlen] = 0;
+    }
+    call->result = rc;
+    return rc;
 }
 
 static LONG run_call(struct ACWiFiCall *call)
@@ -216,6 +324,12 @@ static LONG acw_call(REG(a0, struct ACWiFiCall *call), REG(a6, struct ACWiFiBase
     return run_call(call);
 }
 
+static LONG acw_call2(REG(a0, struct ACWiFiCall2 *call), REG(a6, struct ACWiFiBase *b))
+{
+    (void)b;
+    return run_call2(call);
+}
+
 static void dev_beginio(REG(a1, struct IORequest *raw), REG(a6, struct ACWiFiBase *b))
 {
     struct IOStdReq *io = (struct IOStdReq *)raw;
@@ -227,6 +341,10 @@ static void dev_beginio(REG(a1, struct IORequest *raw), REG(a6, struct ACWiFiBas
         io->io_Length >= sizeof(struct ACWiFiCall)) {
         run_call((struct ACWiFiCall *)io->io_Data);
         io->io_Actual = sizeof(struct ACWiFiCall);
+    } else if (io->io_Command == ACWIFI_IO_CALL2 && io->io_Data &&
+               io->io_Length >= sizeof(struct ACWiFiCall2)) {
+        run_call2((struct ACWiFiCall2 *)io->io_Data);
+        io->io_Actual = sizeof(struct ACWiFiCall2);
     } else {
         io->io_Error = IOERR_NOCMD;
     }
@@ -248,7 +366,7 @@ static struct ACWiFiBase *dev_init(REG(d0, struct ACWiFiBase *b),
     b->lib.lib_Node.ln_Name = (char *)dev_name;
     b->lib.lib_Flags = LIBF_SUMUSED | LIBF_CHANGED;
     b->lib.lib_Version = ACWIFI_DEVICE_VERSION;
-    b->lib.lib_Revision = 0;
+    b->lib.lib_Revision = ACWIFI_DEVICE_REVISION;
     b->lib.lib_IdString = (APTR)dev_id;
     return b;
 }
@@ -257,6 +375,7 @@ static const APTR dev_vectors[] = {
     (APTR)dev_open, (APTR)dev_close, (APTR)dev_expunge, (APTR)dev_null,
     (APTR)dev_beginio, (APTR)dev_abortio,
     (APTR)acw_call,
+    (APTR)acw_call2,
     (APTR)-1
 };
 

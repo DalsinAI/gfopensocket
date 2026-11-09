@@ -25,6 +25,9 @@
 #define ACNETWORK_CMD_WIFI_FORGET  0x44
 #define ACNETWORK_CMD_WIFI_ANSWER  0x45
 #define ACNETWORK_CMD_WIFI_CANCEL  0x46
+#define ACNETWORK_CMD_WIFI_JOINKEY 0x47   /* tx: SSID\0KEY\0 */
+#define ACNETWORK_CMD_NET_GET      0x48   /* answer: the settings as text, no secret */
+#define ACNETWORK_CMD_NET_SET      0x49   /* tx: amicradle-network.txt's lines */
 #define ACNETWORK_CMD_PACKET_INFO    0x50
 #define ACNETWORK_CMD_PACKET_ONLINE  0x51
 #define ACNETWORK_CMD_PACKET_OFFLINE 0x52

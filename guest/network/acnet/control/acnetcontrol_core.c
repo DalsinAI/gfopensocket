@@ -4,8 +4,9 @@
  * connections, the event log, the PC's Wi-Fi, and the diagnostics.
  *
  * gfopensocket.library gives the status, interfaces, routes, DNS servers,
- * sockets and log; gfopensocketwifi.device the Wi-Fi; bsdsocket.library the
- * diagnostics. Each is opened only when there, so the Commodity also runs
+ * sockets and log; gfopensocketwifi.device the Wi-Fi and (1.1) the network
+ * settings; bsdsocket.library the diagnostics. ENV:GFOpenSocket/Interface is
+ * this Amiga's own address. Each is opened only when there, so the Commodity also runs
  * on an Amiga without the card and says so.
  *
  * MIT.
@@ -56,10 +57,20 @@ static char tr_link[LINE], tr_sockets[LINE], tr_in[LINE], tr_out[LINE], tr_conne
             tr_refused[LINE];
 static char toggle_label[24] = "_Go offline...";
 static char wifi_result[LINE] = "Rescan lists the networks Cradle can see.";
+static char net_mode[LINE] = "Read shows this machine's network.";
+static char net_now[LINE] = "";
+static char net_addr[LINE] = "";
+static char net_result[LINE] = "";
+static char own_now[LINE] = "";
+static char own_result[LINE] = "A restart of the Amiga applies a change.";
 static char diag_result[LINE] = "Ready.";
 static char status_bar[LINE];
 
 static char wifi_ssid[33] = "";
+static char wifi_key[65] = "";          /* cleared as soon as it has been used */
+static char net_host[64] = "", net_lan[8] = "", net_ip[48] = "", net_gw[40] = "", net_dns[64] = "";
+static char own_backend[8] = "", own_ip[20] = "", own_mask[20] = "", own_gw[20] = "", own_dns[64] = "";
+static BOOL net_hosted = TRUE;          /* until NET_GET says mode=appliance */
 static char diag_name[64] = "aminet.net";
 static char diag_host[64] = "aminet.net";
 static char diag_port[8] = "80";
@@ -81,6 +92,8 @@ static struct Rows conn_rows = { { 0 }, conn_node, conn_text, CONN_ROWS, 0 };
 static struct Rows log_rows = { { 0 }, log_node, log_text, LOG_ROWS, 0 };
 static struct Rows wifi_rows = { { 0 }, wifi_node, wifi_text, WIFI_ROWS, 0 };
 static char wifi_row_ssid[WIFI_ROWS][33];
+static BOOL wifi_row_known[WIFI_ROWS];
+static BOOL wifi_picked_known;
 
 const ACNCPage acnc_page[ACNC_PAGES] = {
     { "Status", 2, {
@@ -93,12 +106,13 @@ const ACNCPage acnc_page[ACNC_PAGES] = {
           { tr_link, tr_sockets, tr_in, tr_out, tr_connects, tr_refused, NULL },
           { { 0 } }, 0, 0, 0, { { 0 } }, FALSE } } },
     { "Wi-Fi", 1, {
-        { "Cradle's Wi-Fi",
-          { "Joins only networks Cradle already knows;",
-            "passphrases never pass through the Amiga.",
-            "Cradle's Network setting must include Wi-Fi.",
+        { "Wi-Fi",
+          { "On a card this Amiga runs the card's Wi-Fi. On a PC,",
+            "Cradle's Network panel must allow it to change the PC's.",
+            "A new network needs its password; it is not kept here.",
             wifi_result, NULL },
-          { { GID_F_WIFI_SSID, "Network", wifi_ssid, sizeof(wifi_ssid), 24 }, { 0 } },
+          { { GID_F_WIFI_SSID, "Network", wifi_ssid, sizeof(wifi_ssid), 24 },
+            { GID_F_WIFI_KEY, "Password", wifi_key, sizeof(wifi_key), 24 }, { 0 } },
           GID_L_WIFI, 6, 56,
           { { GID_WIFI_RESCAN, "Re_scan", FALSE }, { GID_WIFI_JOIN, "_Join...", FALSE },
             { GID_WIFI_LEAVE, "_Leave...", FALSE }, { GID_WIFI_FORGET, "_Forget...", FALSE } }, TRUE } } },
@@ -116,6 +130,32 @@ const ACNCPage acnc_page[ACNC_PAGES] = {
           0, 0, 0,
           { { GID_DIAG_DNS, "Look _up name", FALSE }, { GID_DIAG_CONNECT, "_Test host", FALSE },
             { GID_DIAG_INTERNET, "_Internet?", FALSE }, { GID_DIAG_COPY, "Sa_ve report", FALSE } }, TRUE } } },
+    { "Settings", 2, {
+        { "This machine's network",
+          { net_mode, net_now, net_addr,
+            "LAN: dhcp, static or off. Address as 192.168.0.50/24;",
+            "DNS: one or more, spaces between. Empty: unchanged.",
+            net_result, NULL },
+          { { GID_F_NET_HOST, "Hostname", net_host, sizeof(net_host), 20 },
+            { GID_F_NET_LAN, "LAN", net_lan, sizeof(net_lan), 8 },
+            { GID_F_NET_ADDR, "Address", net_ip, sizeof(net_ip), 20 },
+            { GID_F_NET_GW, "Gateway", net_gw, sizeof(net_gw), 20 },
+            { GID_F_NET_DNS, "DNS", net_dns, sizeof(net_dns), 20 } },
+          0, 0, 0,
+          { { GID_NET_READ, "_Read", FALSE }, { GID_NET_APPLY, "_Apply...", FALSE }, { 0 } }, TRUE },
+        { "This Amiga's own address",
+          { own_now,
+            "Backend host: the machine's sockets, no address of",
+            "its own. direct: GFOpenSocket's own stack, its own",
+            "address by DHCP (Address dhcp) or a fixed one.",
+            own_result, NULL },
+          { { GID_F_OWN_BACKEND, "Backend", own_backend, sizeof(own_backend), 8 },
+            { GID_F_OWN_ADDR, "Address", own_ip, sizeof(own_ip), 16 },
+            { GID_F_OWN_MASK, "Netmask", own_mask, sizeof(own_mask), 16 },
+            { GID_F_OWN_GW, "Gateway", own_gw, sizeof(own_gw), 16 },
+            { GID_F_OWN_DNS, "DNS", own_dns, sizeof(own_dns), 16 } },
+          0, 0, 0,
+          { { GID_OWN_READ, "Rea_d", FALSE }, { GID_OWN_SAVE, "Sa_ve...", FALSE }, { 0 } }, TRUE } } },
     { "Log", 1, {
         { "GFOpenSocket event log",
           { "Online and offline, DNS failures and refusals, newest last.", NULL },
@@ -442,6 +482,207 @@ static LONG wifi_call(ULONG command, const char *ssid, struct ACWiFiNetwork *row
     return result;
 }
 
+/* gfopensocketwifi.device 1.1's second call (ACWiFiCall2): JOINKEY, NET_GET, NET_SET. Fills *why on
+ * failure. Returns the answer's result, or -1. */
+static LONG wifi_call2(ULONG command, const UBYTE *tx, ULONG txlen, UBYTE *rx, ULONG rxmax, char *why)
+{
+    struct MsgPort *port = CreateMsgPort();
+    struct IOStdReq *req = port ? (struct IOStdReq *)CreateIORequest(port, sizeof(*req)) : NULL;
+    struct ACWiFiCall2 call;
+    LONG result = -1;
+
+    if (!req || OpenDevice((STRPTR)ACWIFI_DEVICE_NAME, 0, (struct IORequest *)req, 0)) {
+        strcpy(why, "gfopensocketwifi.device is not installed.");
+    } else if (req->io_Device->dd_Library.lib_Version == ACWIFI_DEVICE_VERSION &&
+               req->io_Device->dd_Library.lib_Revision < ACWIFI_DEVICE_REVISION) {
+        strcpy(why, "gfopensocketwifi.device is older than 1.1: update GFOpenSocket.");
+        CloseDevice((struct IORequest *)req);
+    } else {
+        register struct Device *a6 __asm("a6") = req->io_Device;
+        register struct ACWiFiCall2 *a0 __asm("a0") = &call;
+        register LONG d0 __asm("d0");
+        memset(&call, 0, sizeof(call));
+        call.size = sizeof(call);
+        call.command = command;
+        call.tx = tx;
+        call.txlen = txlen;
+        call.rx = rx;
+        call.rxmax = rxmax;
+        __asm volatile ("jsr -48(%%a6)" : "=r"(d0), "+r"(a0) : "r"(a6) : "d1", "a1", "cc", "memory");
+        (void)d0;
+        if (call.error == 1) strcpy(why, net_hosted ? "Cradle doesn't allow this Amiga to change the PC's network."
+                                                    : "Not allowed.");
+        else if (call.error == 22) strcpy(why, "Not accepted: see the settings' last line (Read).");
+        else if (call.error == 50) strcpy(why, "The network is off in Cradle.");
+        else if (call.error == 78) strcpy(why, "This machine can't apply network settings.");
+        else if (call.error == 4) strcpy(why, "The request was interrupted.");
+        else if (call.error) sprintf(why, "The request failed (error %lu).", (unsigned long)call.error);
+        else result = call.result;
+        CloseDevice((struct IORequest *)req);
+    }
+    if (req) DeleteIORequest((struct IORequest *)req);
+    if (port) DeleteMsgPort(port);
+    return result;
+}
+
+static void wipe(char *s, ULONG n)
+{
+    volatile char *p = s;
+    while (n--) *p++ = 0;
+}
+
+/* Joins the network in the Network field: a known one as before, else with the Password field. */
+static void wifi_join(void)
+{
+    UBYTE tx[33 + 65];
+    ULONG sl = strlen(wifi_ssid), kl = strlen(wifi_key);
+    struct ACWiFiNetwork n;
+    LONG count;
+
+    if (!kl && wifi_picked_known) {
+        if (wifi_call(ACWIFI_JOIN, wifi_ssid, NULL, 0) < 0) return;
+    } else {
+        if (kl && (kl < 8 || kl > 64)) {
+            strcpy(wifi_result, "A Wi-Fi password is 8 to 63 characters (or 64 hex digits).");
+            wipe(wifi_key, sizeof wifi_key);
+            return;
+        }
+        memcpy(tx, wifi_ssid, sl + 1);
+        memcpy(tx + sl + 1, wifi_key, kl + 1);
+        count = wifi_call2(ACWIFI_JOINKEY, tx, sl + kl + 2, NULL, 0, wifi_result);
+        wipe((char *)tx, sizeof tx);
+        wipe(wifi_key, sizeof wifi_key);
+        if (count < 0) return;
+    }
+    count = wifi_call(ACWIFI_STATUS, NULL, &n, 1);
+    if (count > 0) sprintf(wifi_result, "On %.32s.", n.ssid);
+    else sprintf(wifi_result, "Joining %s...", wifi_ssid);
+}
+
+/* key=value from NET_GET's text, into out (size n). */
+static BOOL net_value(const char *text, const char *key, char *out, ULONG n)
+{
+    ULONG kl = strlen(key);
+    const char *p = text;
+    while (p && *p) {
+        if (!strncmp(p, key, kl) && p[kl] == '=') {
+            const char *v = p + kl + 1, *e = strchr(v, '\n');
+            ULONG len = e ? (ULONG)(e - v) : strlen(v);
+            if (len >= n) len = n - 1;
+            memcpy(out, v, len);
+            out[len] = 0;
+            return TRUE;
+        }
+        p = strchr(p, '\n');
+        if (p) p++;
+    }
+    return FALSE;
+}
+
+static void net_read(void)
+{
+    static char text[2048];
+    char v[LINE];
+    if (wifi_call2(ACWIFI_NET_GET, NULL, 0, (UBYTE *)text, sizeof text, net_result) < 0) return;
+    net_hosted = !(net_value(text, "mode", v, sizeof v) && !strcmp(v, "appliance"));
+    sprintf(net_mode, net_hosted ? "A PC: its own network, read only here." : "A native card: this Amiga runs its network.");
+    if (net_value(text, "connected", v, sizeof v)) sprintf(net_now, "Wi-Fi: %.80s", v[0] ? v : "not connected");
+    if (net_value(text, "address", v, sizeof v)) sprintf(net_addr, "Addresses: %.70s", v[0] ? v : "none");
+    if (!net_value(text, "net_host", net_host, sizeof net_host)) net_host[0] = 0;
+    if (!net_value(text, "net_lan", net_lan, sizeof net_lan)) net_lan[0] = 0;
+    if (!net_value(text, "net_lan_addr", net_ip, sizeof net_ip)) net_ip[0] = 0;
+    if (net_value(text, "last", v, sizeof v) && strcmp(v, "-")) sprintf(net_result, "Last: %.80s", v);
+    else strcpy(net_result, "Read.");
+}
+
+static void net_apply(void)
+{
+    static char text[512];
+    char *t = text;
+    if (net_hosted) { strcpy(net_result, "On a PC, Cradle keeps its own network: read only."); return; }
+    if (net_lan[0] && strcmp(net_lan, "dhcp") && strcmp(net_lan, "static") && strcmp(net_lan, "off")) {
+        strcpy(net_result, "LAN is dhcp, static or off."); return;
+    }
+    text[0] = 0;
+    if (net_host[0]) t += sprintf(t, "hostname = %s\n", net_host);
+    if (net_lan[0]) {
+        t += sprintf(t, "[lan]\nmode = %s\n", net_lan);
+        if (!strcmp(net_lan, "static")) {
+            if (net_ip[0]) t += sprintf(t, "address = %s\n", net_ip);
+            if (net_gw[0]) t += sprintf(t, "gateway = %s\n", net_gw);
+            if (net_dns[0]) t += sprintf(t, "dns = %s\n", net_dns);
+        }
+    }
+    if (!text[0]) { strcpy(net_result, "Nothing to change."); return; }
+    if (wifi_call2(ACWIFI_NET_SET, (const UBYTE *)text, (ULONG)(t - text) + 1, NULL, 0, net_result) >= 0)
+        strcpy(net_result, "Sent: the card applies it in a moment.");
+}
+
+/* ENV:GFOpenSocket/Interface (else ENVARC:): this Amiga's own address (README: the card layer). */
+static void own_read(void)
+{
+    static char text[512];
+    BPTR fh = Open((STRPTR)"ENV:GFOpenSocket/Interface", MODE_OLDFILE);
+    LONG n;
+    if (!fh) fh = Open((STRPTR)"ENVARC:GFOpenSocket/Interface", MODE_OLDFILE);
+    own_backend[0] = own_ip[0] = own_mask[0] = own_gw[0] = own_dns[0] = 0;
+    if (!fh) { strcpy(own_now, "No settings: host when the card is there, else direct by DHCP."); return; }
+    n = Read(fh, text, sizeof text - 1);
+    Close(fh);
+    text[n > 0 ? n : 0] = 0;
+    net_value(text, "backend", own_backend, sizeof own_backend);
+    net_value(text, "address", own_ip, sizeof own_ip);
+    net_value(text, "netmask", own_mask, sizeof own_mask);
+    net_value(text, "gateway", own_gw, sizeof own_gw);
+    net_value(text, "nameserver", own_dns, sizeof own_dns);
+    sprintf(own_now, "Now: %s%s%s", own_backend[0] ? own_backend : "(default)",
+            own_ip[0] ? ", " : "", own_ip);
+}
+
+static BOOL own_write(const char *path, const char *text)
+{
+    BPTR fh = Open((STRPTR)path, MODE_NEWFILE);
+    LONG len = strlen(text);
+    BOOL ok = fh && Write(fh, (APTR)text, len) == len;
+    if (fh) Close(fh);
+    return ok;
+}
+
+static void own_save(void)
+{
+    static char text[512];
+    char *t = text;
+    if (strcmp(own_backend, "host") && strcmp(own_backend, "direct")) {
+        strcpy(own_result, "Backend is host or direct."); return;
+    }
+    t += sprintf(t, "# GFOpenSocketControl, the Settings page\nbackend=%s\n", own_backend);
+    if (!strcmp(own_backend, "direct")) {
+        if (!own_ip[0] || !strcmp(own_ip, "dhcp")) t += sprintf(t, "configure=dhcp\n");
+        else {
+            t += sprintf(t, "address=%s\n", own_ip);
+            if (own_mask[0]) t += sprintf(t, "netmask=%s\n", own_mask);
+            if (own_gw[0]) t += sprintf(t, "gateway=%s\n", own_gw);
+            if (own_dns[0]) {
+                char d[64], *w, *save = NULL;
+                strcpy(d, own_dns);
+                for (w = strtok_r(d, " ,", &save); w; w = strtok_r(NULL, " ,", &save))
+                    t += sprintf(t, "nameserver=%s\n", w);
+            }
+        }
+    }
+    {
+        BPTR l = CreateDir((STRPTR)"ENVARC:GFOpenSocket");
+        if (l) UnLock(l);
+        l = CreateDir((STRPTR)"ENV:GFOpenSocket");
+        if (l) UnLock(l);
+    }
+    if (own_write("ENVARC:GFOpenSocket/Interface", text) && own_write("ENV:GFOpenSocket/Interface", text))
+        strcpy(own_result, "Saved. A restart of the Amiga applies it.");
+    else
+        strcpy(own_result, "Couldn't write ENVARC:GFOpenSocket/Interface.");
+    own_read();
+}
+
 static void wifi_show(const struct ACWiFiNetwork *n, LONG count)
 {
     LONG i;
@@ -454,6 +695,7 @@ static void wifi_show(const struct ACWiFiNetwork *n, LONG count)
         rows_add(&wifi_rows, line);
         /* at most 32 bytes of the device's ssid[33], which needn't end in 0 */
         snprintf(wifi_row_ssid[wifi_rows.count - 1], sizeof wifi_row_ssid[0], "%.32s", n[i].ssid);
+        wifi_row_known[wifi_rows.count - 1] = (n[i].flags & ACWIFI_FLAG_KNOWN) != 0;
     }
 }
 
@@ -470,6 +712,7 @@ BOOL acnc_pick(ULONG list_id, UWORD row)
 {
     if (list_id != GID_L_WIFI || row >= wifi_rows.count) return FALSE;
     strcpy(wifi_ssid, wifi_row_ssid[row]);
+    wifi_picked_known = wifi_row_known[row];
     return TRUE;
 }
 
@@ -595,9 +838,6 @@ static void save_log(void)
 
 BOOL acnc_press(ULONG id, BOOL (*confirm)(const char *text))
 {
-    struct ACWiFiNetwork n;
-    LONG count;
-
     switch (id) {
         case GID_REFRESH:
             break;
@@ -615,12 +855,25 @@ BOOL acnc_press(ULONG id, BOOL (*confirm)(const char *text))
             return TRUE;
         case GID_WIFI_JOIN:
             if (!wifi_ssid[0]) { strcpy(wifi_result, "Pick or type a network first."); return TRUE; }
-            if (!confirm("Join this network?\nIt changes Cradle's own Wi-Fi connection.")) return FALSE;
-            if (wifi_call(ACWIFI_JOIN, wifi_ssid, NULL, 0) >= 0) {
-                count = wifi_call(ACWIFI_STATUS, NULL, &n, 1);
-                if (count > 0) sprintf(wifi_result, "Cradle is on %s.", n.ssid);
-                else sprintf(wifi_result, "Asked Cradle to join %s.", wifi_ssid);
+            if (!confirm("Join this network?\nIt changes this machine's Wi-Fi connection.")) {
+                wipe(wifi_key, sizeof wifi_key);
+                return TRUE;
             }
+            wifi_join();
+            return TRUE;
+        case GID_NET_READ:
+            net_read();
+            return TRUE;
+        case GID_NET_APPLY:
+            if (!confirm("Apply these network settings?\nA new address may end connections.")) return FALSE;
+            net_apply();
+            return TRUE;
+        case GID_OWN_READ:
+            own_read();
+            return TRUE;
+        case GID_OWN_SAVE:
+            if (!confirm("Save this Amiga's own address?\nA restart applies it.")) return FALSE;
+            own_save();
             return TRUE;
         case GID_WIFI_LEAVE:
             if (!confirm("Disconnect Cradle's Wi-Fi?\nIt changes Cradle's own network connection.")) return FALSE;
