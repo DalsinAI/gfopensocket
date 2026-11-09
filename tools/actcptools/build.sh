@@ -61,8 +61,8 @@ build_net ftp
 # AMISSL setting from older callers is ignored.
 build_net httpget -I"$HERE/third_party/opentls/include"
 
-# C:GFOpenSocket (was acnetctl): status, online, offline
-"$CC" $CFLAGS -I"$HERE/src" "$HERE/src/opensocket.c" -o "$OUT/GFOpenSocket"
+# C:GFOpenSocket (was acnetctl): status, online, offline; wifi join, net get, net set (gfopensocketwifi.device 1.1)
+"$CC" $CFLAGS -I"$HERE/src" -I"$HERE/../../guest/network/acwifi/include" "$HERE/src/opensocket.c" -o "$OUT/GFOpenSocket"
 echo "$OUT/GFOpenSocket ($(wc -c < "$OUT/GFOpenSocket") bytes)"
 
 echo "ACTCPTools build complete."

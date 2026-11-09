@@ -30,19 +30,34 @@ enum {
     GID_DIAG_COPY,
     GID_LOG_CLEAR,
     GID_LOG_SAVE,
-    GID_F_WIFI_SSID,            /* input fields */
+    GID_NET_READ,               /* the Settings page (9 Nov 2026) */
+    GID_NET_APPLY,
+    GID_OWN_READ,
+    GID_OWN_SAVE,
+    GID_F_WIFI_SSID,            /* input fields: GID_F_WIFI_SSID up to GID_L_WIFI */
     GID_F_DIAG_NAME,
     GID_F_DIAG_HOST,
     GID_F_DIAG_PORT,
+    GID_F_WIFI_KEY,
+    GID_F_NET_HOST,
+    GID_F_NET_LAN,
+    GID_F_NET_ADDR,
+    GID_F_NET_GW,
+    GID_F_NET_DNS,
+    GID_F_OWN_BACKEND,
+    GID_F_OWN_ADDR,
+    GID_F_OWN_MASK,
+    GID_F_OWN_GW,
+    GID_F_OWN_DNS,
     GID_L_WIFI,                 /* lists */
     GID_L_CONN,
     GID_L_LOG,
     GID_FIRST_FREE              /* a front end's own gadgets start here */
 };
 
-#define ACNC_PAGES       5
+#define ACNC_PAGES       6
 #define ACNC_MAX_LINES   12
-#define ACNC_MAX_FIELDS  3
+#define ACNC_MAX_FIELDS  5
 #define ACNC_MAX_BUTTONS 4
 
 typedef struct ACNCButton {
@@ -98,7 +113,9 @@ struct List *acnc_list(ULONG list_id);
 BOOL acnc_press(ULONG id, BOOL (*confirm)(const char *text));
 
 /* A row picked in a list: for the Wi-Fi list, its network's name goes into
- * the SSID field. TRUE when a field changed. */
+ * the SSID field. TRUE when a field changed. After acnc_press the front end
+ * writes every field's buf back into its gadget: the core may have changed
+ * one (the Wi-Fi password is cleared once it is used). */
 BOOL acnc_pick(ULONG list_id, UWORD row);
 
 const char *acnc_status_line(void);     /* the status bar */

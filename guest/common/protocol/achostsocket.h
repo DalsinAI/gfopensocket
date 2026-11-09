@@ -102,6 +102,12 @@
 #define ACHS_CMD_WIFI_FORGET      0x44   /* tx=known SSID\0 -> async ticket */
 #define ACHS_CMD_WIFI_ANSWER      0x45   /* a0=ticket -> result/rx, EINPROGRESS until done */
 #define ACHS_CMD_WIFI_CANCEL      0x46   /* a0=ticket; forget/cancel outstanding job */
+/* The network from the Amiga (amicradle docs/design/Design-Network-Passthrough.md): async, answered by
+ * WIFI_ANSWER. On a native card the Amiga runs the card's network; on a PC, NET_SET is refused and the
+ * Wi-Fi needs Cradle's switch. */
+#define ACHS_CMD_WIFI_JOINKEY     0x47   /* tx=SSID\0KEY\0 (KEY empty: open) -> async ticket */
+#define ACHS_CMD_NET_GET          0x48   /* -> async ticket; answer: text, no secret, NUL-ended */
+#define ACHS_CMD_NET_SET          0x49   /* tx=amicradle-network.txt lines\0 -> async ticket */
 #define ACHS_CMD_PACKET_INFO      0x50   /* rx: ACPacketInfo */
 #define ACHS_CMD_PACKET_ONLINE    0x51   /* a0: flags; start user-mode Ethernet provider */
 #define ACHS_CMD_PACKET_OFFLINE   0x52   /* stop packet provider */

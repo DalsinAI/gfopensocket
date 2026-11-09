@@ -98,9 +98,33 @@ Use a mock NetworkManager only; automated tests must never change the real host 
   names, so the ReAction build exits before main).
 - Opens in the screen's font; falls back to Topaz 8 when the window would not
   fit the screen.
-- The radio list changes page; Tab and Shift-Tab, and 1 to 5, do too.
+- The radio list changes page; Tab and Shift-Tab, and 1 to 6, do too.
 - Resizing grows the groups; the window never shrinks below what the pages need.
 - Esc and the close gadget hide it; `ctrl alt n` and Exchange's Show bring it
   back on the same page.
 - Starting either front end while the other runs exits quietly (RC 5) and
   brings the running one forward.
+
+## Gate NET - the network from the Amiga (1.1, 9 Nov 2026)
+
+On a PC (an AmiCradle instance):
+- Settings › Read says "A PC: its own network, read only here", with the PC's
+  Wi-Fi and addresses. Apply says it is read only, and sends nothing.
+- Wi-Fi › Join with a password, with Cradle's switch off: "Cradle doesn't allow
+  this Amiga to change the PC's network". The Password field is empty again.
+
+On a native card (Pi 5, Pi 4/400, PiStorm):
+- Settings › Read says "A native card: this Amiga runs its network", with the
+  hostname, LAN and address filled in.
+- Wi-Fi › a new network, its password, Join: the card joins it (Rescan shows
+  `*` on it) and it is still known after the card restarts. The Password field
+  is empty again at once.
+- A short password (under 8) is refused on the Amiga, before anything is sent.
+- Settings › LAN static, an address, Apply: the card takes it. `bad` in LAN:
+  "LAN is dhcp, static or off", nothing sent.
+- This Amiga's own address: direct, dhcp, Save: ENVARC:GFOpenSocket/Interface
+  has backend=direct and configure=dhcp; after a restart the Amiga has an address
+  of its own.
+- `GFOpenSocket net get`, `GFOpenSocket wifi join SSID KEY password` and
+  `GFOpenSocket net set FILE` do the same from the Shell.
+

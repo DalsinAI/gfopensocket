@@ -63,7 +63,7 @@ To keep using Roadshow, or any other stack, as before, put `backend=none` in `EN
 | `bsdsocket.library` | `LIBS:`, or a ROM | The published socket interface: the 46 classic vectors (none stubbed) and 27 Roadshow-era calls after them (BPF, routes, modern IPv4 lookups), and the card layer that chooses the backend. Its id string says GFOpenSocket. |
 | `gfopensocket.library` | `LIBS:` | GFOpenSocket's core: status, interfaces, routes, sockets, the event log, Wi-Fi requests. Everything else opens it. Was `acnetwork.library`. |
 | `gfopensocket.device` | `DEVS:Networks/` | The card's driver: private calls for sockets, and a SANA-II face for frames. Was `acnet.device`; programs that open it fall back to `acnet.device` on older installs. |
-| `gfopensocketwifi.device` | `DEVS:` | Control of the Wi-Fi outside the Amiga, by permission. Was `acwifi.device`. |
+| `gfopensocketwifi.device` | `DEVS:` | Control of the Wi-Fi outside the Amiga, by permission. Was `acwifi.device`. 1.1 (9 Nov 2026) adds `ACWiFiCall2`: joining a network the host doesn't know yet, with its password, and reading and changing the machine's network settings (amicradle `docs/design/Design-Network-Passthrough.md`). On a native card the Amiga runs the card's network; on a PC, the settings are read only and the Wi-Fi needs Cradle's switch. |
 | `GFOpenSocketControl` | `SYS:Tools/Commodities/` | The Commodity, in GadTools. Was ACNetControlGT; the ReAction ACNetControl is retired. |
 | `GFOpenSocket` | `C:` | Status, online, offline. Was `acnetctl`. |
 | ping, traceroute, arp, ifconfig, route, netstat, hostname, resolve | `SYS:Tools/GFOpenSocket/` | The standard network tools (ACTCPTools). Never put in `C:`, so another stack's commands are not overwritten. |
