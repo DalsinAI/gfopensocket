@@ -103,6 +103,14 @@ if [ -f "$HERE/tests/bsdqual.c" ]; then
     echo "$OUT/bsdqual ($(wc -c < "$OUT/bsdqual") bytes)"
 fi
 
+# nonblockprobe: FIONBIO and the other IoctlSocket requests, EWOULDBLOCK,
+# non-blocking connect with WaitSelect, sendmsg/recvmsg on UDP (4.6)
+if [ -f "$HERE/tests/nonblockprobe.c" ]; then
+    "$CC" -m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -Wall -Wno-pointer-sign -noixemul \
+        -o "$OUT/nonblockprobe" "$HERE/tests/nonblockprobe.c"
+    echo "$OUT/nonblockprobe ($(wc -c < "$OUT/nonblockprobe") bytes)"
+fi
+
 if [ -f "$HERE/tests/taskwakeprobe.c" ]; then
     "$CC" -m68040 -specs=$SPECS -O2 -fno-delete-null-pointer-checks -Wall -Wno-pointer-sign -noixemul \
         -o "$OUT/taskwakeprobe" "$HERE/tests/taskwakeprobe.c"
