@@ -21,7 +21,7 @@
 #define REG(r, decl) register decl __asm(#r)   /* bebbo gcc: an argument in a register */
 
 #define ACNET_LIB_VERSION   4
-#define ACNET_LIB_REVISION  5
+#define ACNET_LIB_REVISION  6
 #define DTABLE_DEFAULT      64
 #define DTABLE_MAX          256
 #define NAME_MAX_ADDRS      32
