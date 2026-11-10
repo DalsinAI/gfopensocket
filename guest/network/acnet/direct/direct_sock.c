@@ -12,6 +12,7 @@
 #include "lwip/raw.h"
 #include "lwip/dns.h"
 #include "lwip/dhcp.h"
+#include "lwip/igmp.h"
 #include "lwip/ip_addr.h"
 #include "lwip/pbuf.h"
 
@@ -39,6 +40,7 @@ enum {
 #define NDGRAM 16
 #define NACC   8
 #define NTICK  8
+#define NMEMB  4                                     /* multicast groups a socket joins, at most */
 
 struct DSock {
     UBYTE used, type, listening, connecting;
@@ -49,6 +51,9 @@ struct DSock {
     struct { struct pbuf *p; ULONG addr; UWORD port; } dq[NDGRAM];
     UBYTE dqh, dqn, acn, pad;
     UBYTE acq[NACC];                             /* accepted handles waiting */
+#if LWIP_IGMP
+    ULONG memb[NMEMB][2];                        /* IP_ADD_MEMBERSHIP's groups and interfaces (network order), left at close */
+#endif
 };
 
 struct Ticket { UBYTE used, state; ULONG addr; char name[128]; };   /* state 0 run, 1 done, 2 failed */
@@ -190,9 +195,25 @@ static void dgram_push(struct DSock *s, struct pbuf *p, const ip_addr_t *addr, u
     s->dqn++;
 }
 
+#if LWIP_IGMP
+/* A datagram to a group reaches only the sockets that joined it, as on BSD
+ * (lwIP hands it to every socket bound to the port) */
+static int joined(const struct DSock *s)
+{
+    int i;
+    u32_t g = ip4_addr_get_u32(ip4_current_dest_addr());
+    if (!ip4_addr_ismulticast(ip4_current_dest_addr())) return 1;
+    for (i = 0; i < NMEMB; i++) if (s->memb[i][0] == g) return 1;
+    return 0;
+}
+#endif
+
 static void udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     (void)pcb;
+#if LWIP_IGMP
+    if (arg && !joined(arg)) { pbuf_free(p); return; }
+#endif
     if (arg) dgram_push(arg, p, addr, port); else pbuf_free(p);
 }
 
@@ -202,6 +223,9 @@ static u8_t raw_recv_cb(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip
 {
     struct pbuf *c;
     (void)pcb;
+#if LWIP_IGMP
+    if (arg && !joined(arg)) return 0;
+#endif
     if (arg && (c = pbuf_clone(PBUF_RAW, PBUF_RAM, p)) != NULL) dgram_push(arg, c, addr, 0);
     return 0;
 }
@@ -234,6 +258,15 @@ static void sock_free(struct DSock *s)
         }
         if (s->rx) pbuf_free(s->rx);
     } else {
+#if LWIP_IGMP
+        for (i = 0; i < NMEMB; i++)
+            if (s->memb[i][0]) {
+                ip4_addr_t g, f;
+                ip4_addr_set_u32(&g, s->memb[i][0]);
+                ip4_addr_set_u32(&f, s->memb[i][1]);
+                igmp_leavegroup(&f, &g);
+            }
+#endif
         if (s->pcb.any) { if (s->type == SOCK_DGRAM) udp_remove(s->pcb.udp); else raw_remove(s->pcb.raw); }
         for (i = 0; i < s->dqn; i++) pbuf_free(s->dq[(s->dqh + i) % NDGRAM].p);
     }
@@ -249,7 +282,13 @@ static LONG c_socket(ULONG domain, ULONG type, ULONG proto, ULONG *err)
     if (type == SOCK_STREAM) {
         if ((s->pcb.tcp = tcp_new()) != NULL) tcp_hook(s, s->pcb.tcp);
     } else if (type == SOCK_DGRAM) {
-        if ((s->pcb.udp = udp_new()) != NULL) udp_recv(s->pcb.udp, udp_recv_cb, s);
+        if ((s->pcb.udp = udp_new()) != NULL) {
+            udp_recv(s->pcb.udp, udp_recv_cb, s);
+#if LWIP_IGMP
+            udp_set_flags(s->pcb.udp, UDP_FLAGS_MULTICAST_LOOP);   /* IP_MULTICAST_LOOP on, as on BSD */
+            udp_set_multicast_ttl(s->pcb.udp, 1);                  /* and IP_MULTICAST_TTL 1: on this LAN only */
+#endif
+        }
     } else {
         if ((s->pcb.raw = raw_new((u8_t)(proto ? proto : 1))) != NULL) raw_recv(s->pcb.raw, raw_recv_cb, s);
     }
@@ -443,6 +482,63 @@ static LONG c_poll(ULONG count, const UBYTE *tx, ULONG txlen, UBYTE *rx, ULONG r
 #define SOL_IP_LEVEL 0                              /* IPPROTO_IP */
 #define OPT_IP_TTL   4                              /* IP_TTL, as the Amiga's netinet/in.h */
 
+#define OPT_IP_MULTICAST_IF    9                    /* the Amiga's netinet/in.h, as BSD's */
+#define OPT_IP_MULTICAST_TTL   10
+#define OPT_IP_MULTICAST_LOOP  11
+#define OPT_IP_ADD_MEMBERSHIP  12
+#define OPT_IP_DROP_MEMBERSHIP 13
+
+#if LWIP_IGMP
+/* Multicast: a group joined (ip_mreq: the group, then the interface's
+ * address or INADDR_ANY), its TTL, loop and interface. Each refused when it
+ * can't be done, never taken and ignored. */
+static LONG mc_sockopt(struct DSock *s, ULONG opt, const UBYTE *tx, ULONG txlen, ULONG *err)
+{
+    ULONG v = 0;
+    int i;
+    if (!s->pcb.any || s->type == SOCK_STREAM) { *err = E_OPNOTSUPP; return -1; }
+    if (opt == OPT_IP_ADD_MEMBERSHIP || opt == OPT_IP_DROP_MEMBERSHIP) {
+        ULONG g, f;
+        ip4_addr_t ga, fa;
+        if (txlen < 8) { *err = E_INVAL; return -1; }
+        CopyMem((APTR)tx, &g, 4);
+        CopyMem((APTR)(tx + 4), &f, 4);
+        ip4_addr_set_u32(&ga, g);
+        ip4_addr_set_u32(&fa, f);
+        if (!ip4_addr_ismulticast(&ga)) { *err = E_INVAL; return -1; }
+        for (i = 0; i < NMEMB && !(s->memb[i][0] == g && s->memb[i][1] == f); i++) ;
+        if (opt == OPT_IP_DROP_MEMBERSHIP) {
+            if (i == NMEMB) { *err = E_ADDRNOTAVAIL; return -1; }
+            igmp_leavegroup(&fa, &ga);
+            s->memb[i][0] = s->memb[i][1] = 0;
+            return 0;
+        }
+        if (i < NMEMB) { *err = E_ADDRINUSE; return -1; }   /* this socket has it already */
+        for (i = 0; i < NMEMB && s->memb[i][0]; i++) ;
+        if (i == NMEMB) { *err = E_NOBUFS; return -1; }
+        if (igmp_joingroup(&fa, &ga) != ERR_OK) { *err = E_ADDRNOTAVAIL; return -1; }
+        s->memb[i][0] = g;
+        s->memb[i][1] = f;
+        return 0;
+    }
+    if (s->type != SOCK_DGRAM) { *err = E_OPNOTSUPP; return -1; }
+    if (txlen >= 4) CopyMem((APTR)tx, &v, 4);
+    else if (txlen >= 1 && opt != OPT_IP_MULTICAST_IF) v = tx[0];     /* a u_char, as BSD takes too */
+    else { *err = E_INVAL; return -1; }
+    if (opt == OPT_IP_MULTICAST_TTL) {
+        if (v > 255 && v != 0xffffffffUL) { *err = E_INVAL; return -1; }
+        udp_set_multicast_ttl(s->pcb.udp, (u8_t)(v == 0xffffffffUL ? 1 : v));   /* -1: BSD's default, 1 */
+    } else if (opt == OPT_IP_MULTICAST_LOOP) {
+        if (v) udp_set_flags(s->pcb.udp, UDP_FLAGS_MULTICAST_LOOP); else udp_clear_flags(s->pcb.udp, UDP_FLAGS_MULTICAST_LOOP);
+    } else {
+        ip4_addr_t fa;
+        ip4_addr_set_u32(&fa, v);
+        udp_set_multicast_netif_addr(s->pcb.udp, &fa);
+    }
+    return 0;
+}
+#endif
+
 static LONG c_sockopt(struct DSock *s, int set, ULONG level, ULONG opt, const UBYTE *tx, ULONG txlen,
                       UBYTE *rx, ULONG rxmax, ULONG *rxlen, ULONG *err)
 {
@@ -455,6 +551,10 @@ static LONG c_sockopt(struct DSock *s, int set, ULONG level, ULONG opt, const UB
              * listening socket's is its accepted connections' too. */
             if (txlen < 4 || !s->pcb.any || (v != 0xffffffffUL && (v < 1 || v > 255))) { *err = E_INVAL; return -1; }
             ((struct ip_pcb *)s->pcb.any)->ttl = (u8_t)(v == 0xffffffffUL ? IP_DEFAULT_TTL : v);
+#if LWIP_IGMP
+        } else if (level == SOL_IP_LEVEL && opt >= OPT_IP_MULTICAST_IF && opt <= OPT_IP_DROP_MEMBERSHIP) {
+            return mc_sockopt(s, opt, tx, txlen, err);
+#endif
         } else if (level == 0xffff && s->pcb.any) {
             u8_t f = opt == 0x0004 ? SOF_REUSEADDR : opt == 0x0008 ? SOF_KEEPALIVE : opt == 0x0020 ? SOF_BROADCAST : 0;
             if (f) { if (v) ip_set_option((struct ip_pcb *)s->pcb.any, f); else ip_reset_option((struct ip_pcb *)s->pcb.any, f); }
@@ -474,6 +574,14 @@ static LONG c_sockopt(struct DSock *s, int set, ULONG level, ULONG opt, const UB
         v = tcp_nagle_disabled(s->pcb.tcp) ? 1 : 0;
     } else if (level == SOL_IP_LEVEL && opt == OPT_IP_TTL && s->pcb.any) {
         v = ((struct ip_pcb *)s->pcb.any)->ttl;
+#if LWIP_IGMP
+    } else if (level == SOL_IP_LEVEL && s->type == SOCK_DGRAM && s->pcb.udp && opt == OPT_IP_MULTICAST_TTL) {
+        v = udp_get_multicast_ttl(s->pcb.udp);
+    } else if (level == SOL_IP_LEVEL && s->type == SOCK_DGRAM && s->pcb.udp && opt == OPT_IP_MULTICAST_LOOP) {
+        v = udp_is_flag_set(s->pcb.udp, UDP_FLAGS_MULTICAST_LOOP) ? 1 : 0;
+    } else if (level == SOL_IP_LEVEL && s->type == SOCK_DGRAM && s->pcb.udp && opt == OPT_IP_MULTICAST_IF) {
+        v = ip4_addr_get_u32(udp_get_multicast_netif_addr(s->pcb.udp));
+#endif
     }
     if (rx && rxmax >= 4) CopyMem(&v, rx, 4);
     if (rxlen) *rxlen = rxmax >= 4 ? 4 : 0;

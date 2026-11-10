@@ -16,6 +16,7 @@
 #include "lwip/etharp.h"
 #include "lwip/dhcp.h"
 #include "lwip/dns.h"
+#include "lwip/igmp.h"
 #include "lwip/timeouts.h"
 #include "lwip/pbuf.h"
 #include "netif/ethernet.h"
@@ -202,6 +203,59 @@ static err_t sana_output(struct netif *ni, struct pbuf *p)
     return ERR_OK;
 }
 
+#if LWIP_IGMP
+/* Multicast (IGMP): the Ethernet addresses the device is to take frames for.
+ * lwIP asks from whichever task joins a group (with the stack's lock held);
+ * the device is told from the stack's process (mc_apply, each tick), since
+ * S.ctl's reply port is that process's. Two groups can share one address
+ * (01:00:5e and the group's low 23 bits): each counts its groups. */
+#define NMCAST 16
+static struct { UBYTE mac[6]; UBYTE groups, told; } mc[NMCAST];
+static UBYTE mc_dirty;
+
+static err_t sana_mac_filter(struct netif *ni, const ip4_addr_t *group, enum netif_mac_filter_action act)
+{
+    u32_t a = lwip_ntohl(ip4_addr_get_u32(group));
+    UBYTE m[6];
+    int i, j, free = -1;
+    (void)ni;
+    m[0] = 0x01; m[1] = 0x00; m[2] = 0x5e;
+    m[3] = (UBYTE)((a >> 16) & 0x7f); m[4] = (UBYTE)(a >> 8); m[5] = (UBYTE)a;
+    for (i = 0; i < NMCAST; i++) {
+        if (!mc[i].groups && !mc[i].told) { if (free < 0) free = i; continue; }
+        for (j = 0; j < 6 && mc[i].mac[j] == m[j]; j++) ;
+        if (j == 6) break;
+    }
+    if (act == NETIF_ADD_MAC_FILTER) {
+        if (i == NMCAST) {
+            if (free < 0) return ERR_MEM;
+            i = free;
+            CopyMem(m, mc[i].mac, 6);
+        }
+        if (mc[i].groups == 255) return ERR_MEM;
+        mc[i].groups++;
+    } else if (i < NMCAST && mc[i].groups) mc[i].groups--;
+    mc_dirty = 1;
+    return ERR_OK;
+}
+
+/* the device told of each address taken or let go (the stack's process, lock held) */
+static void mc_apply(void)
+{
+    int i;
+    if (!mc_dirty || !S.ctl) return;
+    mc_dirty = 0;
+    for (i = 0; i < NMCAST; i++) {
+        UBYTE want = mc[i].groups != 0;
+        if (want == mc[i].told) continue;
+        S.ctl->ios2_Req.io_Command = want ? S2_ADDMULTICASTADDRESS : S2_DELMULTICASTADDRESS;
+        CopyMem(mc[i].mac, S.ctl->ios2_SrcAddr, 6);
+        if (DoIO((struct IORequest *)S.ctl) == 0 || !want) mc[i].told = want;
+        else mc_dirty = 1;                          /* the device refused: asked again next tick */
+    }
+}
+#endif
+
 static err_t sana_netif_init(struct netif *ni)
 {
     ni->name[0] = 'e';
@@ -212,6 +266,10 @@ static err_t sana_netif_init(struct netif *ni)
     ni->hwaddr_len = 6;
     CopyMem(S.mac, ni->hwaddr, 6);
     ni->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET;
+#if LWIP_IGMP
+    ni->flags |= NETIF_FLAG_IGMP;
+    netif_set_igmp_mac_filter(ni, sana_mac_filter);
+#endif
     netif_set_hostname(ni, S.hostname);
     return ERR_OK;
 }
@@ -361,6 +419,9 @@ static void proc_main(void)
         direct_lock();
         if (sigs & rsig) frames_in();
         if (rport) write_reap();
+#if LWIP_IGMP
+        mc_apply();
+#endif
         if (sigs & tsig) {
             if (GetMsg(tport)) {
                 sys_check_timeouts();

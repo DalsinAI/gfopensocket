@@ -6,7 +6,7 @@ disk has a network driver or configuration.
 
 | File | What |
 | --- | --- |
-| `lwip/` | lwIP 2.2.1 (`STABLE-2_2_1_RELEASE`), unchanged: the core, IPv4 (ARP, ICMP, IP, fragments, DHCP), UDP, TCP, DNS and Ethernet. Its own BSD licence: `lwip/COPYING`. |
+| `lwip/` | lwIP 2.2.1 (`STABLE-2_2_1_RELEASE`), unchanged: the core, IPv4 (ARP, ICMP, IGMP, IP, fragments, DHCP), UDP, TCP, DNS and Ethernet. Its own BSD licence: `lwip/COPYING`. |
 | `port/` | lwIP's options (`lwipopts.h`: no OS layer, memory from exec) and the 68k compiler layer (`arch/cc.h`). |
 | `direct_stack.c` | The stack's process, the SANA-II interface (raw frames, reads for IPv4 and ARP, writes from any task), and what lwIP asks of the platform. |
 | `direct_sock.c` | HostSocket's commands (`common/protocol/achostsocket.h`) over lwIP's raw API, so bsdsocket.library's front end works as it does over the bridge. |

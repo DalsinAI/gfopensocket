@@ -21,18 +21,23 @@ jobs:
           gcc -Wall -Wextra -Werror -Wno-unused-parameter -Iinclude -I../../library \
             -o card_parse_test card_parse_test.c ../../library/card_parse.c
           ./card_parse_test
-      - name: Direct's IP_TTL, with lwIP
+      - name: Direct's IP_TTL and multicast, with lwIP
         working-directory: guest/network/acnet/tests/host
         run: |
           L=../../direct/lwip/src
           LWIP="$L/core/def.c $L/core/dns.c $L/core/inet_chksum.c $L/core/init.c $L/core/ip.c $L/core/mem.c
             $L/core/memp.c $L/core/netif.c $L/core/pbuf.c $L/core/raw.c $L/core/tcp.c $L/core/tcp_in.c
             $L/core/tcp_out.c $L/core/timeouts.c $L/core/udp.c $L/core/ipv4/dhcp.c $L/core/ipv4/etharp.c
-            $L/core/ipv4/icmp.c $L/core/ipv4/ip4.c $L/core/ipv4/ip4_addr.c $L/core/ipv4/ip4_frag.c $L/netif/ethernet.c"
-          gcc -Wall -Werror -Wno-unused-parameter -Iinclude -Idirect_arch -I../../direct/port -I$L/include \
-            -I../../direct -I../../library -I../../../../common/protocol -I../../../acnetwork/include \
-            -o direct_ttl_test direct_ttl_test.c ../../direct/direct_sock.c $LWIP
-          ./direct_ttl_test
+            $L/core/ipv4/icmp.c $L/core/ipv4/igmp.c $L/core/ipv4/ip4.c $L/core/ipv4/ip4_addr.c $L/core/ipv4/ip4_frag.c
+            $L/netif/ethernet.c"
+          I="-Iinclude -Idirect_arch -I../../direct/port -I$L/include -I../../direct -I../../library -I../../../../common/protocol -I../../../acnetwork/include"
+          for t in direct_ttl_test direct_igmp_test; do
+            gcc -Wall -Werror -Wno-unused-parameter $I -o $t $t.c ../../direct/direct_sock.c $LWIP
+            ./$t
+          done
+          # and Direct built without multicast (DIRECT_CFLAGS=-DDIRECT_IGMP=0)
+          gcc -Wall -Werror -Wno-unused-parameter -DDIRECT_IGMP=0 $I -o direct_ttl_test0 direct_ttl_test.c ../../direct/direct_sock.c $LWIP
+          ./direct_ttl_test0
       - name: vector table from the ABI manifest
         run: |
           L=guest/network/acnet/library
