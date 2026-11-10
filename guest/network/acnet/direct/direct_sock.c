@@ -170,6 +170,7 @@ static err_t tcp_accept_cb(void *arg, struct tcp_pcb *pcb, err_t err)
     if (err != ERR_OK || !pcb) return ERR_VAL;
     if (!l || l->acn >= NACC || !(s = sock_new(SOCK_STREAM))) { tcp_abort(pcb); return ERR_ABRT; }
     s->pcb.tcp = pcb;
+    pcb->ttl = l->pcb.tcp ? l->pcb.tcp->ttl : pcb->ttl;   /* IP_TTL is inherited, as on BSD */
     s->connected = 1;
     s->hidden = 1;
     tcp_hook(s, pcb);
@@ -439,13 +440,22 @@ static LONG c_poll(ULONG count, const UBYTE *tx, ULONG txlen, UBYTE *rx, ULONG r
     return (LONG)ready;
 }
 
+#define SOL_IP_LEVEL 0                              /* IPPROTO_IP */
+#define OPT_IP_TTL   4                              /* IP_TTL, as the Amiga's netinet/in.h */
+
 static LONG c_sockopt(struct DSock *s, int set, ULONG level, ULONG opt, const UBYTE *tx, ULONG txlen,
-                      UBYTE *rx, ULONG rxmax, ULONG *rxlen)
+                      UBYTE *rx, ULONG rxmax, ULONG *rxlen, ULONG *err)
 {
     ULONG v = 0;
     if (set) {
         if (txlen >= 4) CopyMem((APTR)tx, &v, 4);
-        if (level == 0xffff && s->pcb.any) {
+        if (level == SOL_IP_LEVEL && opt == OPT_IP_TTL) {
+            /* IP_TTL: 1 to 255 on every packet the socket sends, -1 the
+             * default; anything else refused, never taken and ignored. A
+             * listening socket's is its accepted connections' too. */
+            if (txlen < 4 || !s->pcb.any || (v != 0xffffffffUL && (v < 1 || v > 255))) { *err = E_INVAL; return -1; }
+            ((struct ip_pcb *)s->pcb.any)->ttl = (u8_t)(v == 0xffffffffUL ? IP_DEFAULT_TTL : v);
+        } else if (level == 0xffff && s->pcb.any) {
             u8_t f = opt == 0x0004 ? SOF_REUSEADDR : opt == 0x0008 ? SOF_KEEPALIVE : opt == 0x0020 ? SOF_BROADCAST : 0;
             if (f) { if (v) ip_set_option((struct ip_pcb *)s->pcb.any, f); else ip_reset_option((struct ip_pcb *)s->pcb.any, f); }
         } else if (level == 6 && opt == 1 && s->type == SOCK_STREAM && s->pcb.tcp && !s->listening) {
@@ -462,6 +472,8 @@ static LONG c_sockopt(struct DSock *s, int set, ULONG level, ULONG opt, const UB
             v = ip_get_option((struct ip_pcb *)s->pcb.any, opt == 0x0004 ? SOF_REUSEADDR : opt == 0x0008 ? SOF_KEEPALIVE : SOF_BROADCAST) ? 1 : 0;
     } else if (level == 6 && opt == 1 && s->type == SOCK_STREAM && s->pcb.tcp && !s->listening) {
         v = tcp_nagle_disabled(s->pcb.tcp) ? 1 : 0;
+    } else if (level == SOL_IP_LEVEL && opt == OPT_IP_TTL && s->pcb.any) {
+        v = ((struct ip_pcb *)s->pcb.any)->ttl;
     }
     if (rx && rxmax >= 4) CopyMem(&v, rx, 4);
     if (rxlen) *rxlen = rxmax >= 4 ? 4 : 0;
@@ -661,8 +673,8 @@ LONG direct_command(ULONG cmd, ULONG a0, ULONG a1, ULONG a2, ULONG a3,
         tcp_shutdown(s->pcb.tcp, a1 != 1, a1 != 0);
         if (a1 != 1) s->eof = 1;
         return 0;
-    case ACHS_CMD_SETSOCKOPT: return c_sockopt(s, 1, a1, a2, tx, txlen, NULL, 0, NULL);
-    case ACHS_CMD_GETSOCKOPT: return c_sockopt(s, 0, a1, a2, NULL, 0, rx, a3 < rxmax ? a3 : rxmax, rxlen);
+    case ACHS_CMD_SETSOCKOPT: return c_sockopt(s, 1, a1, a2, tx, txlen, NULL, 0, NULL, err);
+    case ACHS_CMD_GETSOCKOPT: return c_sockopt(s, 0, a1, a2, NULL, 0, rx, a3 < rxmax ? a3 : rxmax, rxlen, err);
     case ACHS_CMD_GETSOCKNAME: return c_name(s, 0, rx, rxmax, rxlen, err);
     case ACHS_CMD_GETPEERNAME: return c_name(s, 1, rx, rxmax, rxlen, err);
     case ACHS_CMD_POLL: return c_poll(a0, tx, txlen, rx, rxmax, rxlen);
