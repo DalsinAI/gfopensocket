@@ -20,7 +20,17 @@
 #define LWIP_DHCP_DOES_ACD_CHECK    0
 #define LWIP_ACD                    0
 #define LWIP_AUTOIP                 0
-#define LWIP_IGMP                   0
+/* IGMP (multicast: mDNS's 224.0.0.251, the services card's LAN discovery):
+ * on unless built with DIRECT_CFLAGS=-DDIRECT_IGMP=0 */
+#ifndef DIRECT_IGMP
+#define DIRECT_IGMP                 1
+#endif
+#define LWIP_IGMP                   DIRECT_IGMP
+#if LWIP_IGMP
+#define LWIP_MULTICAST_TX_OPTIONS   1
+#define MEMP_NUM_IGMP_GROUP         16
+#define SO_REUSE_RXTOALL            1   /* a group's datagram to every socket bound to its port (SO_REUSEADDR), as BSD */
+#endif
 #define LWIP_DNS                    1
 #define DNS_MAX_SERVERS             3
 #define DNS_TABLE_SIZE              8

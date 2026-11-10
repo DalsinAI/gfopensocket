@@ -5,7 +5,8 @@
 # when the card layer chooses Direct (provider_direct.c, romseg.c).
 #   STOVE=... sh build.sh OUT_DIR       writes OUT_DIR/gfopensocketdirect.image
 #                                       and OUT_DIR/direct_image.c
-# OPT= (default -Os). MIT.
+# OPT= (default -Os). DIRECT_CFLAGS=-DDIRECT_IGMP=0 builds it without
+# multicast (IGMP). MIT.
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 # soft float: link libnix's libm020, not libm881 (specs/m68k-soft-m68040.specs)
@@ -20,7 +21,7 @@ L="$HERE/lwip/src"
 LWIP="$L/core/def.c $L/core/dns.c $L/core/inet_chksum.c $L/core/init.c $L/core/ip.c $L/core/mem.c
   $L/core/memp.c $L/core/netif.c $L/core/pbuf.c $L/core/raw.c $L/core/tcp.c $L/core/tcp_in.c
   $L/core/tcp_out.c $L/core/timeouts.c $L/core/udp.c $L/core/ipv4/dhcp.c $L/core/ipv4/etharp.c
-  $L/core/ipv4/icmp.c $L/core/ipv4/ip4.c $L/core/ipv4/ip4_addr.c $L/core/ipv4/ip4_frag.c
+  $L/core/ipv4/icmp.c $L/core/ipv4/igmp.c $L/core/ipv4/ip4.c $L/core/ipv4/ip4_addr.c $L/core/ipv4/ip4_frag.c
   $L/netif/ethernet.c"
 # direct_stack.c first: its RomTag is the first in the image
 # shellcheck disable=SC2086
