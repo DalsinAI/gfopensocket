@@ -21,6 +21,11 @@ jobs:
           gcc -Wall -Wextra -Werror -Wno-unused-parameter -Iinclude -I../../library \
             -o card_parse_test card_parse_test.c ../../library/card_parse.c
           ./card_parse_test
+      - name: sendmsg/recvmsg iovecs (lib_msgvec.h)
+        working-directory: guest/network/acnet/tests/host
+        run: |
+          gcc -Wall -Wextra -Werror -I../../library -o msgvec_test msgvec_test.c
+          ./msgvec_test
       - name: Direct's IP_TTL and multicast, with lwIP
         working-directory: guest/network/acnet/tests/host
         run: |
