@@ -1,7 +1,7 @@
 /* lib_msgvec.h (sendmsg/recvmsg iovecs), run on the build machine: a stream
  * send bigger than one transfer is cut to it (POSIX gives a short count),
  * and the gather copies only what was cut; a datagram that does not fit is
- * EMSGSIZE; a receive buffer bigger than one transfer is fine; NULL bases
+ * EMSGSIZE, connected or not; a receive buffer bigger than one transfer is fine; NULL bases
  * are EFAULT. libtorrent's TCP writes failed "Message too long" without
  * the cut. MIT. Built by the host-tests workflow:
  *   cc -Wall -Werror -I../../library -o msgvec_test msgvec_test.c */
@@ -53,6 +53,15 @@ int main(void)
     /* datagram over the limit */
     sb.last_err = 0;
     CHECK(msg_iov_size(&sb, &m, TX, 0, &tot) == -1 && sb.last_err == AE_MSGSIZE);
+
+    /* sendmsg's choice: a connected datagram (no msg_name) over the limit
+     * is EMSGSIZE, not a short datagram; a stream is cut */
+    CHECK(msg_send_clips(SOCK_STREAM) == 1);
+    CHECK(msg_send_clips(SOCK_DGRAM) == 0);
+    CHECK(msg_send_clips(SOCK_RAW) == 0);
+    sb.last_err = 0;
+    CHECK(msg_iov_size(&sb, &m, TX, msg_send_clips(SOCK_DGRAM), &tot) == -1 && sb.last_err == AE_MSGSIZE);
+    CHECK(msg_iov_size(&sb, &m, TX, msg_send_clips(SOCK_STREAM), &tot) == 0 && tot == TX);
 
     /* fits whole either way */
     v[1].iov_len = 100;

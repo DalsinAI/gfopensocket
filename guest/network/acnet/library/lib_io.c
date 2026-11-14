@@ -74,7 +74,7 @@ LONG bsd_sendmsg(struct SocketBase *sb, LONG s, struct msghdr *msg, LONG flags)
     }
 
     /* a stream (no name) sends what fits; a datagram must fit whole */
-    if (msg_iov_size(sb, msg, limit, !off, &total) < 0) return -1;
+    if (msg_iov_size(sb, msg, limit, msg_send_clips(f->type), &total) < 0) return -1;
     x = scratch(sb);
     if (!x) return -1;
 

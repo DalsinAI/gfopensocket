@@ -53,4 +53,12 @@ static void msg_scatter(const UBYTE *src, ULONG len, struct msghdr *msg)
     }
 }
 
+/* Whether a sendmsg on a socket of this type may be cut to one transfer:
+ * only a stream's. A datagram, connected (no msg_name) or not, that does
+ * not fit is EMSGSIZE. */
+static int msg_send_clips(ULONG type)
+{
+    return type == SOCK_STREAM;
+}
+
 #endif
