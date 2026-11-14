@@ -51,44 +51,7 @@ LONG bsd_recvfrom(struct SocketBase *sb,LONG s,APTR buf,LONG len,LONG flags,stru
  * Ancillary data is not part of ACNet v1.
  */
 
-static LONG msg_iov_size(struct SocketBase *sb, const struct msghdr *msg,
-                         ULONG limit, ULONG *total)
-{
-    ULONG i, n = 0;
-
-    if (!msg) return fail(sb, AE_FAULT);
-    if (msg->msg_iovlen && !msg->msg_iov) return fail(sb, AE_FAULT);
-
-    for (i = 0; i < msg->msg_iovlen; ++i) {
-        ULONG len = (ULONG)msg->msg_iov[i].iov_len;
-        if (len && !msg->msg_iov[i].iov_base) return fail(sb, AE_FAULT);
-        if (len > limit - n) return fail(sb, AE_MSGSIZE);
-        n += len;
-    }
-    *total = n;
-    return 0;
-}
-
-static void msg_gather(UBYTE *dst, const struct msghdr *msg)
-{
-    ULONG i, pos = 0;
-    for (i = 0; i < msg->msg_iovlen; ++i) {
-        ULONG len = (ULONG)msg->msg_iov[i].iov_len;
-        if (len) CopyMem(msg->msg_iov[i].iov_base, dst + pos, len);
-        pos += len;
-    }
-}
-
-static void msg_scatter(const UBYTE *src, ULONG len, struct msghdr *msg)
-{
-    ULONG i, pos = 0;
-    for (i = 0; i < msg->msg_iovlen && pos < len; ++i) {
-        ULONG take = (ULONG)msg->msg_iov[i].iov_len;
-        if (take > len - pos) take = len - pos;
-        if (take) CopyMem((APTR)(src + pos), msg->msg_iov[i].iov_base, take);
-        pos += take;
-    }
-}
+#include "lib_msgvec.h"
 
 LONG bsd_sendmsg(struct SocketBase *sb, LONG s, struct msghdr *msg, LONG flags)
 {
@@ -110,7 +73,8 @@ LONG bsd_sendmsg(struct SocketBase *sb, LONG s, struct msghdr *msg, LONG flags)
         limit = ACHS_TX_SIZE;
     }
 
-    if (msg_iov_size(sb, msg, limit, &total) < 0) return -1;
+    /* a stream (no name) sends what fits; a datagram must fit whole */
+    if (msg_iov_size(sb, msg, limit, !off, &total) < 0) return -1;
     x = scratch(sb);
     if (!x) return -1;
 
@@ -120,7 +84,7 @@ LONG bsd_sendmsg(struct SocketBase *sb, LONG s, struct msghdr *msg, LONG flags)
         for (i = 0; i < 16; ++i) x[i] = 0;
         CopyMem(msg->msg_name, x, n);
     }
-    msg_gather(x + off, msg);
+    msg_gather(x + off, msg, total);
 
     for (;;) {
         if (off)
@@ -148,7 +112,7 @@ LONG bsd_recvmsg(struct SocketBase *sb, LONG s, struct msghdr *msg, LONG flags)
     if (!msg) return fail(sb, AE_FAULT);
 
     limit = msg->msg_name ? (ACHS_RX_SIZE - 16) : ACHS_RX_SIZE;
-    if (msg_iov_size(sb, msg, limit, &capacity) < 0) return -1;
+    if (msg_iov_size(sb, msg, limit, 1, &capacity) < 0) return -1;
     x = scratch(sb);
     if (!x) return -1;
 
