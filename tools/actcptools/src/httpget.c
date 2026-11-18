@@ -7,7 +7,9 @@
  * http:// always; https:// through GFOpenTLS (gfopentls.library, GFOpenUp's GFOpenTLS
  * part): TLS 1.2 or later, the server's certificate checked against
  * S:GFOpenTLS/ca-bundle.pem and ENVARC:GFOpenTLS/certs/, and its name. Follows
- * up to 5 redirects. (Until 1.1 https:// needed a build with AmiSSL 5.)
+ * up to 5 redirects, of up to 4,096 characters each (1.2: GitHub's release
+ * downloads go on to signed addresses over 1,000 long; 1.1 took 512). (Until 1.1
+ * https:// needed a build with AmiSSL 5.)
  * GFOpenSocket ACTCPTools. MIT. */
 #include <exec/types.h>
 #include <dos/dos.h>
@@ -26,7 +28,7 @@
 
 #include "ostool.h"
 
-static const char version[] __attribute__((used)) = "$VER: httpget 1.1 (19.10.2026) GFOpenSocket";
+static const char version[] __attribute__((used)) = "$VER: httpget 1.2 (18.11.2026) GFOpenSocket";
 
 struct Library *OpenTLSBase;
 static struct OTContext *ot_ctx;           /* made on the first https://, kept for redirects */
@@ -152,55 +154,7 @@ static long conn_line(char *out, long max)
 
 /* ---- URLs ------------------------------------------------------------------- */
 
-struct url {
-    BOOL tls;
-    char host[128];
-    unsigned port;
-    char path[512];
-};
-
-static int parse_url(const char *text, struct url *u)
-{
-    const char *p = text, *h, *e;
-    size_t n;
-    if (!strncasecmp(p, "http://", 7)) { u->tls = FALSE; u->port = 80; p += 7; }
-    else if (!strncasecmp(p, "https://", 8)) { u->tls = TRUE; u->port = 443; p += 8; }
-    else return 0;
-    h = p;
-    e = h + strcspn(h, ":/?#");
-    n = e - h;
-    if (!n || n >= sizeof(u->host)) return 0;
-    memcpy(u->host, h, n);
-    u->host[n] = 0;
-    if (*e == ':') {
-        u->port = (unsigned)atol(e + 1);
-        e += 1 + strspn(e + 1, "0123456789");
-        if (!u->port) return 0;
-    }
-    if (*e != '/' && *e != '?' && *e) return 0;
-    if (snprintf(u->path, sizeof(u->path), "%s%s", *e == '/' ? "" : "/", e) >= (int)sizeof(u->path))
-        return 0;                                   /* a path too long to send whole */
-    if (strchr(u->path, '#')) *strchr(u->path, '#') = 0;
-    return 1;
-}
-
-/* A Location: header, absolute or relative to u, into next. */
-static int follow(const struct url *u, const char *loc, struct url *next)
-{
-    char text[700];
-    if (!strncasecmp(loc, "http://", 7) || !strncasecmp(loc, "https://", 8)) return parse_url(loc, next);
-    *next = *u;
-    /* a path too long for next is refused, not cut: a cut one is another address */
-    if (loc[0] == '/') {
-        if (snprintf(next->path, sizeof(next->path), "%s", loc) >= (int)sizeof(next->path)) return 0;
-    } else {
-        char *slash;
-        snprintf(text, sizeof(text), "%s", u->path);
-        if ((slash = strrchr(text, '/'))) slash[1] = 0;
-        if (snprintf(next->path, sizeof(next->path), "%s%s", text, loc) >= (int)sizeof(next->path)) return 0;
-    }
-    return 1;
-}
+#include "httpget_url.h"     /* struct url, parse_url, follow: host-tested (tests/httpget_url_test.c) */
 
 /* The last part of u's path (before any query) as a plain name in the current
  * drawer: a ':' would name a volume or assign (/S:User-Startup), so it and
@@ -273,7 +227,7 @@ static int httpget_main(int argc, char **argv)
 {
     struct url u, next;
     const char *url = NULL, *to = NULL;
-    static char line[1024], request[1024], location[sizeof line];   /* a whole Location: header */
+    static char line[HG_URL_MAX + 64], request[HG_URL_MAX + 512], location[sizeof line];   /* a whole Location: header */
     BOOL head_only = FALSE, chunked;
     int i, hops, status, rc = 10;
 
@@ -318,6 +272,8 @@ static int httpget_main(int argc, char **argv)
             else if (!strncasecmp(line, "Location:", 9)) {
                 const char *p = line + 9;
                 while (*p == ' ') p++;
+                /* a header that filled line was cut by conn_line: a cut address is another one */
+                if (strlen(line) >= sizeof(line) - 1) { fprintf(stderr, "httpget: the Location: header is too long\n"); goto out; }
                 snprintf(location, sizeof(location), "%s", p);
             }
         }
