@@ -1,2 +1,2 @@
-# name: command, run from the top of the repository. host-tests.yml runs the acnet host tests.
-httpget-url: d=$(mktemp -d) && cc -Wall -Wextra -I tools/actcptools/src -o "$d/hu" tools/actcptools/tests/httpget_url_test.c && "$d/hu"
+# name @ paths: command, run from the top of the repository. host-tests.yml runs the acnet host tests.
+httpget-url @ tools/actcptools: d=$(mktemp -d) && cc -Wall -Wextra -I tools/actcptools/src -o "$d/hu" tools/actcptools/tests/httpget_url_test.c && "$d/hu"
